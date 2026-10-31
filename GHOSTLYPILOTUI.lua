@@ -640,15 +640,15 @@ local function GetThemeEmojis()
     local themeAccent = Library.Theme.Accent
     -- 简单通过颜色判断主题
     if themeAccent.R > 0.8 and themeAccent.B < 0.5 then
-        return {"🍁", "🔥"}, Color3.fromRGB(255, 150, 150) -- 烈焰红
+        return {"🍁", "🍁", "🍁"}, Color3.fromRGB(255, 150, 150) -- 烈焰红
     elseif themeAccent.B > 0.8 and themeAccent.R < 0.5 then
-        return {"🫧", "💧"}, Color3.fromRGB(150, 200, 255) -- 深海蓝
+        return {"🐟", "💧", "❄️"}, Color3.fromRGB(150, 200, 255) -- 深海蓝
     elseif themeAccent.G > 0.8 and themeAccent.R < 0.5 then
         return {"🍃", "🌿"}, Color3.fromRGB(150, 255, 200) -- 薄荷绿
     elseif themeAccent.R > 0.3 and themeAccent.R < 0.6 and themeAccent.G < 0.3 then
         return {"⭐", "✨", "🌙"}, Color3.fromRGB(200, 200, 200) -- 暗夜黑
     else
-        return {"🌸", "🌸", "🌺"}, Color3.fromRGB(255, 170, 200) -- 默认樱花粉
+        return {"🌸", "🌸", "🌷"}, Color3.fromRGB(255, 170, 200) -- 默认樱花粉
     end
 end
 

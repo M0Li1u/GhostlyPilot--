@@ -1,6 +1,6 @@
 -- ============================================================
 -- GhostlyPilotUI - YC API Wrapper
--- Author: 茉莉璐
+-- Author: 茉莉璐 With Deepseek
 -- Version: 2.2.1
 -- ============================================================
 
@@ -1166,14 +1166,13 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon)
 
     local Content = Instance.new("Frame")
     Content.Name = "Content"
-    Content.BackgroundColor3 = self.Theme.CardBg
+    Content.BackgroundTransparency = 1
     Content.Position = UDim2.new(0, 0, 0, ROW_H)
     Content.Size = UDim2.new(1, 0, 0, 0)
     Content.AutomaticSize = Enum.AutomaticSize.Y
     Content.ClipsDescendants = false
     Content.Visible = false
     Content.Parent = Row
-    self:_BindTheme(Content, function() return Library.Theme.CardBg end)
 
     local CPad = Instance.new("UIPadding")
     CPad.PaddingTop = UDim.new(0, PAD)
@@ -1189,35 +1188,42 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon)
     CLayout.Parent = Content
 
     local open = false
+    local currentHeight = ROW_H
+
     local function refreshHeight()
-        if not open then return end
         task.defer(function()
             if not Content.Parent then return end
-            local contentH = Content.AbsoluteSize.Y
-            TweenService:Create(Row, TweenInfo.new(0.18, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Size = UDim2.new(1, 0, 0, ROW_H + contentH)
-            }):Play()
-        end)
-    end
-    Content:GetPropertyChangedSignal("AbsoluteSize"):Connect(refreshHeight)
-
-    local function watchChild(child)
-        if not child:IsA("GuiObject") then return end
-        child:GetPropertyChangedSignal("AbsoluteSize"):Connect(refreshHeight)
-    end
-    Content.ChildAdded:Connect(watchChild)
-    for _, c in ipairs(Content:GetChildren()) do watchChild(c) end
-
-    local isToggled = false
-    local function updateSwitchVisual()
-        if isToggled then
-            TweenService:Create(SwitchBtn, TweenInfo.new(0.2), {BackgroundColor3 = Library.Theme.Accent}):Play()
-            TweenService:Create(Knob, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = UDim2.new(1, -14, 0.5, 0)}):Play()
-        else
-            TweenService:Create(SwitchBtn, TweenInfo.new(0.2), {BackgroundColor3 = Library.Theme.Off}):Play()
-            TweenService:Create(Knob, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {Position = UDim2.new(0, 2, 0.5, 0)}):Play()
+            local layout = Content:FindFirstChildOfClass("UIListLayout")
+            local pad = Content:FindFirstChildOfClass("UIPadding")
+            local padTop = pad and pad.PaddingTop.Offset or 0
+            local padBottom = pad and pad.PaddingBottom.Offset or 0
+            
+            local contentH = 0
+            if layout then 
+                contentH = layout.AbsoluteContentSize.Y + padTop + padBottom + 15 
+            else 
+                contentH = Content.AbsoluteSize.Y 
+            end
+            
+            local targetHeight = open and (ROW_H + contentH) or ROW_H
+               
+            if currentHeight ~= targetHeight then
+                currentHeight = targetHeight
+                TweenService:Create(Row, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(1, 0, 0, targetHeight) }):Play()
         end
-    end
+    end)
+end
+
+Content:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() task.defer(refreshHeight) end)
+local layoutObj = Content:FindFirstChildOfClass("UIListLayout")
+if layoutObj then 
+    layoutObj:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() task.defer(refreshHeight) end) 
+end
+Content.ChildAdded:Connect(function(child) 
+    if child:IsA("GuiObject") then 
+        task.defer(function() task.wait(0.05); refreshHeight() end) 
+    end 
+end)
 
     local function toggle()
         isToggled = not isToggled

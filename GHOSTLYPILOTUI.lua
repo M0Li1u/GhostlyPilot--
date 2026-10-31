@@ -689,25 +689,69 @@ task.spawn(function()
             elseif themeAccent.R > 0.8 and themeAccent.B < 0.5 then petal.Text = "🍁"
             elseif themeAccent.R > 0.3 and themeAccent.R < 0.6 then petal.Text = "🌙"
             else petal.Text = "🌸" end
-            
-            petal.Font = Enum.Font.GothamBold
-            petal.TextSize = 25
-            petal.TextColor3 = themeAccent
-            petal.TextTransparency = 0.4
-            petal.Size = UDim2.fromOffset(30, 30)
-            
-            petal.Position = UDim2.new(0, math.random(0, 600), 0, -40)
-            petal.ZIndex = 2
-            petal.Parent = SakuraFrame
-            
-            local tween = TweenService:Create(petal, TweenInfo.new(math.random(4, 8), Enum.EasingStyle.Linear), {
-                Position = UDim2.new(0, petal.Position.X.Offset, 1, 40),
-                Rotation = math.random(0, 360) + 360
-            })
-            tween:Play()
-            tween.Completed:Connect(function() petal:Destroy() end)
-            task.wait(math.random(3, 8) / 10)
-        end
+-- ============================================================
+-- 🌸 婉月 UI 终极视觉复刻版 (强制显形！)
+-- ============================================================
+local SakuraFrame = Instance.new("Frame")
+SakuraFrame.Name = "SakuraWallpaper"
+SakuraFrame.Size = UDim2.new(1, 0, 1, 0)
+-- 强制底色为浅粉色，防止主题变白
+SakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 240, 245)
+SakuraFrame.BackgroundTransparency = 0.2 
+SakuraFrame.ZIndex = 1
+SakuraFrame.ClipsDescendants = true
+SakuraFrame.Parent = MainCard
+Instance.new("UICorner", SakuraFrame).CornerRadius = UDim.new(0, 16)
+Library.Globals.SakuraFrame = SakuraFrame
+
+-- 第一层：铺满整个背景的樱花暗纹贴图 (强制显示)
+local bgPattern = Instance.new("ImageLabel")
+bgPattern.Size = UDim2.new(1, 0, 1, 0)
+bgPattern.BackgroundTransparency = 1
+bgPattern.Image = "rbxassetid://1316045217"
+bgPattern.ScaleType = Enum.ScaleType.Crop
+bgPattern.ImageTransparency = 0.75
+bgPattern.ZIndex = 1
+bgPattern.Parent = SakuraFrame
+Instance.new("UICorner", bgPattern).CornerRadius = UDim.new(0, 16)
+
+-- 第二层：动态飘落大花瓣 (强制开花)
+task.spawn(function()
+    local petalImage = "rbxassetid://8131033444"
+    
+    while SakuraFrame and SakuraFrame.Parent do
+        local petal = Instance.new("ImageLabel")
+        petal.BackgroundTransparency = 1
+        petal.Image = petalImage
+        
+        petal.ImageColor3 = Color3.fromRGB(255, 182, 193)
+        petal.ImageTransparency = math.random(40, 70) / 100 
+        
+        local pSize = math.random(60, 110)
+        petal.Size = UDim2.fromOffset(pSize, pSize)
+        
+        local startX = math.random(-50, 650)
+        petal.Position = UDim2.new(0, startX, 0, -100)
+        petal.ZIndex = 2
+        petal.Parent = SakuraFrame
+
+        local fallTime = math.random(15, 30) / 10
+        local endX = startX + math.random(-100, 100)
+        local startRot = math.random(0, 360)
+        petal.Rotation = startRot
+
+        local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
+            Position = UDim2.new(0, endX, 1, 100),
+            Rotation = startRot + math.random(180, 360)
+        })
+        tween:Play()
+
+        tween.Completed:Connect(function()
+            petal:Destroy()
+        end)
+
+        -- 密度
+        task.wait(math.random(1, 5) / 100)
     end
 end)
 
@@ -2058,8 +2102,8 @@ end
 local function playLoader(onFinish)
     task.spawn(function()
         local ok, err = pcall(function()
-            local MAIN_TEXT = "GhostlyPilotUI"
-            local SUB_TEXT = "UI作者：茉莉璐"
+            local MAIN_TEXT = "GhostlyPilot"
+            local SUB_TEXT = "茉莉璐"
             local HOLD_TIME = 1.5
             local LETTER_FLY_TIME = 0.25
             local LETTER_STAGGER = 0.05

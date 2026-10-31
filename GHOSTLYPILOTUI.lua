@@ -884,7 +884,7 @@ end)
     -- 右侧内容区
     local RightPanel = Instance.new("ScrollingFrame")
     RightPanel.Name = "RightPanel"
-    RightPanel.Size = UDim2.new(1, -204, 1, -50)
+    RightPanel.Size = UDim2.new(1, -200, 1, -60)
     RightPanel.Position = UDim2.new(0, 194, 0, 50)
     RightPanel.BackgroundColor3 = Library.Theme.CardBg
     RightPanel.BackgroundTransparency = 0.1

@@ -32,16 +32,16 @@ local parentGui = (gethui and gethui()) or CoreGui
 -- ============================================================
 Library.Presets = {
     ["樱花粉"] = {
-        Accent   = Color3.fromRGB(255, 120, 220),
-        Active   = Color3.fromRGB(120, 170, 255),
-        Slider   = Color3.fromRGB(120, 140, 255),
-        CardBg   = Color3.fromRGB(252, 252, 255),
-        PanelBg  = Color3.fromRGB(248, 248, 252),
-        Stroke   = Color3.fromRGB(235, 235, 240),
-        TextDark = Color3.fromRGB(40, 40, 45),
-        TextGray = Color3.fromRGB(130, 130, 145),
-        Off      = Color3.fromRGB(200, 200, 205),
-        OffText  = Color3.fromRGB(100, 100, 110),
+    Accent   = Color3.fromRGB(255, 120, 220),
+    Active   = Color3.fromRGB(255, 150, 200),
+    Slider   = Color3.fromRGB(255, 120, 180),
+    CardBg   = Color3.fromRGB(255, 240, 245),
+    PanelBg  = Color3.fromRGB(255, 245, 248),
+    Stroke   = Color3.fromRGB(255, 200, 220),
+    TextDark = Color3.fromRGB(100, 50, 70),
+    TextGray = Color3.fromRGB(180, 130, 150),
+    Off      = Color3.fromRGB(240, 210, 220),
+    OffText  = Color3.fromRGB(150, 100, 120),
     },
     ["深海蓝"] = {
         Accent   = Color3.fromRGB(80, 180, 255),
@@ -611,79 +611,103 @@ local function buildBaseUI()
     Library.Globals.MainGradient = MainGradient
     
 -- ============================================================
--- 🌸 纯代码高仿“婉月 UI” (无外部贴图，纯樱花粉)
+-- 🌸 婉月 UI 终极视觉复刻版 (高透底 + 暗纹背景 + 大花瓣)
 -- ============================================================
 local SakuraFrame = Instance.new("Frame")
 SakuraFrame.Name = "SakuraWallpaper"
 SakuraFrame.Size = UDim2.new(1, 0, 1, 0)
--- 核心1：半透明的粉白底色 (模仿模组的玻璃质感)
-SakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 235, 245)
-SakuraFrame.BackgroundTransparency = 0.25
+-- 把底色调成半透明白，让后面的 3D 场景透出来
+SakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+SakuraFrame.BackgroundTransparency = 0.35 
 SakuraFrame.ZIndex = 1
 SakuraFrame.ClipsDescendants = true
 SakuraFrame.Parent = MainCard
 Instance.new("UICorner", SakuraFrame).CornerRadius = UDim.new(0, 16)
 Library.Globals.SakuraFrame = SakuraFrame
 
--- 核心2：用纯 UI 画一个巨大的“樱花暗纹”背景 (不用图片)
--- 我们用几个巨大的粉色半透明圆形/圆角矩形，叠在底层当樱花的剪影
-local patternHolder = Instance.new("Frame")
-patternHolder.Size = UDim2.new(1, 0, 1, 0)
-patternHolder.BackgroundTransparency = 1
-patternHolder.ZIndex = 1
-patternHolder.Parent = SakuraFrame
+-- 第一层：铺满整个背景的樱花暗纹贴图 (复刻图里的底纹)
+local bgPattern = Instance.new("ImageLabel")
+bgPattern.Size = UDim2.new(1, 0, 1, 0)
+bgPattern.BackgroundTransparency = 1
+-- 用的是一张超大的樱花纹理图，平铺模式
+bgPattern.Image = "rbxassetid://1316045217"
+bgPattern.ScaleType = Enum.ScaleType.Crop
+bgPattern.ImageTransparency = 0.75 -- 透明度极高，只做暗纹
+bgPattern.ZIndex = 1
+bgPattern.Parent = SakuraFrame
+Instance.new("UICorner", bgPattern).CornerRadius = UDim.new(0, 16)
 
-for i = 1, 6 do
-    local petalBg = Instance.new("Frame")
-    petalBg.Size = UDim2.new(0, math.random(150, 250), 0, math.random(150, 250))
-    petalBg.Position = UDim2.new(math.random(-10, 90)/100, 0, math.random(-10, 90)/100, 0)
-    petalBg.BackgroundColor3 = Color3.fromRGB(255, 192, 203) -- 粉色
-    petalBg.BackgroundTransparency = 0.85 -- 极透，只留一点点痕迹
-    petalBg.Rotation = math.random(0, 360)
-    petalBg.ZIndex = 1
-    petalBg.Parent = patternHolder
-    Instance.new("UICorner", petalBg).CornerRadius = UDim.new(1, 0) -- 圆形/椭圆
-end
-
--- 核心3：纯代码飘落大号花瓣 (不用图片)
+-- 第二层：动态飘落的大花瓣贴图 (复刻图里飘落的花瓣)
 task.spawn(function()
+    local petalImage = "rbxassetid://8131033444" -- 高质量樱花花瓣
+    
     while SakuraFrame and SakuraFrame.Parent do
-        -- 我们不用图片，用文字符号放大，配合粉色渐变
-        local petal = Instance.new("TextLabel")
+        -- 只有樱花粉主题才下“暴雨”，其他主题保持安静
+        local isSakura = (Library.Theme.Accent.R > 0.8 and Library.Theme.Accent.B > 0.8)
+        
+        local petal = Instance.new("ImageLabel")
         petal.BackgroundTransparency = 1
-        petal.Text = "🌸"
-        petal.Font = Enum.Font.GothamBold
-        petal.TextColor3 = Color3.fromRGB(255, 150, 180) -- 高仿的粉红
-        petal.TextTransparency = math.random(20, 50) / 100 
+        petal.Image = petalImage
         
-        -- 强行放大字号，模拟大花瓣
-        petal.TextSize = math.random(40, 80)
-        petal.Size = UDim2.fromOffset(100, 100) -- 给足空间防止裁剪
-        
-        local startX = math.random(-50, 650)
-        petal.Position = UDim2.new(0, startX, 0, -100)
-        petal.ZIndex = 2
-        petal.Parent = SakuraFrame
+        if isSakura then
+            -- 樱花粉专属：大花瓣、半透明、极速
+            petal.ImageColor3 = Color3.fromRGB(255, 182, 193)
+            petal.ImageTransparency = math.random(40, 70) / 100 
+            
+            -- 👇 花瓣大小：60 到 110 像素，非常大
+            local pSize = math.random(60, 110)
+            petal.Size = UDim2.fromOffset(pSize, pSize)
+            
+            local startX = math.random(-50, 650)
+            petal.Position = UDim2.new(0, startX, 0, -100)
+            petal.ZIndex = 2 -- 压在上面
+            petal.Parent = SakuraFrame
 
-        -- 极速下落 (1到2.5秒落到底)
-        local fallTime = math.random(10, 25) / 10
-        local endX = startX + math.random(-100, 100)
-        local startRot = math.random(0, 360)
-        petal.Rotation = startRot
+            local fallTime = math.random(15, 30) / 10 -- 1.5 到 3 秒落到底
+            local endX = startX + math.random(-100, 100)
+            local startRot = math.random(0, 360)
+            petal.Rotation = startRot
 
-        -- 加上旋转和下落
-        local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
-            Position = UDim2.new(0, endX, 1, 100),
-            Rotation = startRot + math.random(180, 360)
-        })
-        tween:Play()
+            local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
+                Position = UDim2.new(0, endX, 1, 100),
+                Rotation = startRot + math.random(180, 360)
+            })
+            tween:Play()
 
-        tween.Completed:Connect(function()
-            petal:Destroy()
-        end)
+            tween.Completed:Connect(function()
+                petal:Destroy()
+            end)
 
-        -- 出花密度：每 0.02 到 0.05 秒出大片，满屏粉色
-        task.wait(math.random(2, 5) / 100)
+            -- 密度：每 0.01 ~ 0.05 秒出一个，满屏乱飞
+            task.wait(math.random(1, 5) / 100)
+        else
+            -- 其他主题换成 Emoji
+            petal.Image = ""
+            local themeAccent = Library.Theme.Accent
+            if themeAccent.B > 0.8 then petal.Text = "💧"
+            elseif themeAccent.G > 0.8 then petal.Text = "🍃"
+            elseif themeAccent.R > 0.8 and themeAccent.B < 0.5 then petal.Text = "🍁"
+            elseif themeAccent.R > 0.3 and themeAccent.R < 0.6 then petal.Text = "🌙"
+            else petal.Text = "🌸" end
+            
+            petal.Font = Enum.Font.GothamBold
+            petal.TextSize = 25
+            petal.TextColor3 = themeAccent
+            petal.TextTransparency = 0.4
+            petal.Size = UDim2.fromOffset(30, 30)
+            
+            petal.Position = UDim2.new(0, math.random(0, 600), 0, -40)
+            petal.ZIndex = 2
+            petal.Parent = SakuraFrame
+            
+            local tween = TweenService:Create(petal, TweenInfo.new(math.random(4, 8), Enum.EasingStyle.Linear), {
+                Position = UDim2.new(0, petal.Position.X.Offset, 1, 40),
+                Rotation = math.random(0, 360) + 360
+            })
+            tween:Play()
+            tween.Completed:Connect(function() petal:Destroy() end)
+            task.wait(math.random(3, 8) / 10)
+        end
     end
 end)
 
@@ -2034,8 +2058,8 @@ end
 local function playLoader(onFinish)
     task.spawn(function()
         local ok, err = pcall(function()
-            local MAIN_TEXT = "GhostlyPilot"
-            local SUB_TEXT = "茉莉璐"
+            local MAIN_TEXT = "GhostlyPilotUI"
+            local SUB_TEXT = "UI作者：茉莉璐"
             local HOLD_TIME = 1.5
             local LETTER_FLY_TIME = 0.25
             local LETTER_STAGGER = 0.05

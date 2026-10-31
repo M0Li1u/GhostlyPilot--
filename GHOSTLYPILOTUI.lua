@@ -637,76 +637,63 @@ bgPattern.ZIndex = 1
 bgPattern.Parent = SakuraFrame
 Instance.new("UICorner", bgPattern).CornerRadius = UDim.new(0, 16)
 
--- 第二层：动态飘落的大花瓣贴图 (复刻图里飘落的花瓣)
 task.spawn(function()
-    local petalImage = "rbxassetid://8131033444" -- 高质量樱花花瓣
-    
-    while SakuraFrame and SakuraFrame.Parent do
-        -- 只有樱花粉主题才下“暴雨”，其他主题保持安静
-        local isSakura = (Library.Theme.Accent.R > 0.8 and Library.Theme.Accent.B > 0.8)
+    while true do
+        task.wait(0.5)
+        local playerGui = game:GetService("Players").LocalPlayer:FindFirstChild("PlayerGui")
+        local gui = playerGui and (playerGui:FindFirstChild("GhostlyPilotUI") or playerGui:FindFirstChild("GhostlyPilot_Loader"))
+        local mainCard = gui and gui:FindFirstChild("MainCard")
         
-        local petal = Instance.new("ImageLabel")
-        petal.BackgroundTransparency = 1
-        petal.Image = petalImage
-        
-        if isSakura then
-            -- 樱花粉专属：大花瓣、半透明、极速
-            petal.ImageColor3 = Color3.fromRGB(255, 182, 193)
-            petal.ImageTransparency = math.random(40, 70) / 100 
+        if mainCard and not mainCard:FindFirstChild("MyCustomSakura") then
+            local sakuraFrame = Instance.new("Frame")
+            sakuraFrame.Name = "MyCustomSakura"
+            sakuraFrame.Size = UDim2.new(1, 0, 1, 0)
+            sakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 235, 245)
+            sakuraFrame.BackgroundTransparency = 0.5 
+            sakuraFrame.ZIndex = 1
+            sakuraFrame.ClipsDescendants = true
+            sakuraFrame.Parent = mainCard
+            Instance.new("UICorner", sakuraFrame).CornerRadius = UDim.new(0, 16)
             
-            -- 👇 花瓣大小：60 到 110 像素，非常大
-            local pSize = math.random(60, 110)
-            petal.Size = UDim2.fromOffset(pSize, pSize)
-            
-            local startX = math.random(-50, 650)
-            petal.Position = UDim2.new(0, startX, 0, -100)
-            petal.ZIndex = 2 -- 压在上面
-            petal.Parent = SakuraFrame
-
-            local fallTime = math.random(15, 30) / 10 -- 1.5 到 3 秒落到底
-            local endX = startX + math.random(-100, 100)
-            local startRot = math.random(0, 360)
-            petal.Rotation = startRot
-
-            local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
-                Position = UDim2.new(0, endX, 1, 100),
-                Rotation = startRot + math.random(180, 360)
-            })
-            tween:Play()
-
-            tween.Completed:Connect(function()
-                petal:Destroy()
+            mainCard.ChildAdded:Connect(function(child)
+                if child:IsA("GuiObject") and child ~= sakuraFrame then
+                    child.ZIndex = math.max(child.ZIndex, 2)
+                end
             end)
 
-            -- 密度：每 0.01 ~ 0.05 秒出一个，满屏乱飞
-            task.wait(math.random(1, 5) / 100)
-        else
-            -- 其他主题换成 Emoji
-            petal.Image = ""
-            local themeAccent = Library.Theme.Accent
-            if themeAccent.B > 0.8 then petal.Text = "💧"
-            elseif themeAccent.G > 0.8 then petal.Text = "🍃"
-            elseif themeAccent.R > 0.8 and themeAccent.B < 0.5 then petal.Text = "🍁"
-            elseif themeAccent.R > 0.3 and themeAccent.R < 0.6 then petal.Text = "🌙"
-            else petal.Text = "🌸" end
-            
-            petal.Font = Enum.Font.GothamBold
-            petal.TextSize = 25
-            petal.TextColor3 = themeAccent
-            petal.TextTransparency = 0.4
-            petal.Size = UDim2.fromOffset(30, 30)
-            
-            petal.Position = UDim2.new(0, math.random(0, 600), 0, -40)
-            petal.ZIndex = 2
-            petal.Parent = SakuraFrame
-            
-            local tween = TweenService:Create(petal, TweenInfo.new(math.random(4, 8), Enum.EasingStyle.Linear), {
-                Position = UDim2.new(0, petal.Position.X.Offset, 1, 40),
-                Rotation = math.random(0, 360) + 360
-            })
-            tween:Play()
-            tween.Completed:Connect(function() petal:Destroy() end)
-            task.wait(math.random(3, 8) / 10)
+            task.spawn(function()
+                while sakuraFrame and sakuraFrame.Parent do
+                    local petal = Instance.new("TextLabel")
+                    petal.BackgroundTransparency = 1
+                    petal.Text = "🌸"
+                    petal.Font = Enum.Font.GothamBold
+                    petal.TextColor3 = Color3.fromRGB(255, 150, 180)
+                    petal.TextTransparency = math.random(20, 50) / 100 
+                    
+                    local pSize = math.random(40, 80)
+                    petal.TextSize = pSize
+                    petal.Size = UDim2.fromOffset(100, 100)
+                    
+                    local startX = math.random(-50, 650)
+                    petal.Position = UDim2.new(0, startX, 0, -100)
+                    petal.ZIndex = 2
+                    petal.Parent = sakuraFrame
+
+                    local fallTime = math.random(10, 20) / 10
+                    local endX = startX + math.random(-100, 100)
+                    local startRot = math.random(0, 360)
+                    petal.Rotation = startRot
+
+                    local tween = game:GetService("TweenService"):Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
+                        Position = UDim2.new(0, endX, 1, 100),
+                        Rotation = startRot + math.random(180, 360)
+                    })
+                    tween:Play()
+
+                    tween.Completed:Connect(function() petal:Destroy() end)
+                    task.wait(math.random(2, 5) / 100)
+                end
+            end)
         end
     end
 end)
@@ -2058,8 +2045,8 @@ end
 local function playLoader(onFinish)
     task.spawn(function()
         local ok, err = pcall(function()
-            local MAIN_TEXT = "GhostlyPilotUI"
-            local SUB_TEXT = "UI作者：茉莉璐"
+            local MAIN_TEXT = "GhostlyPilot"
+            local SUB_TEXT = "茉莉璐：妈妈。"
             local HOLD_TIME = 1.5
             local LETTER_FLY_TIME = 0.25
             local LETTER_STAGGER = 0.05

@@ -611,7 +611,7 @@ local function buildBaseUI()
     Library.Globals.MainGradient = MainGradient
     
 -- ============================================================
--- 樱花粉(2.0)
+-- 🌸 高配动态樱花壁纸 (极致还原版)
 -- ============================================================
 MainCard.BackgroundTransparency = 0.15 
 
@@ -628,11 +628,10 @@ Instance.new("UICorner", SakuraFrame).CornerRadius = UDim.new(0, 16)
 task.spawn(function()
     while SakuraFrame and SakuraFrame.Parent do
         local petal = Instance.new("ImageLabel")
-        petal.Name = "Petal"
-        petal.Size = UDim2.fromOffset(math.random(15, 30), math.random(15, 30)) 
+        petal.Size = UDim2.fromOffset(math.random(15, 30), math.random(15, 30))
         petal.BackgroundTransparency = 1
-        petal.Image = "rbxassetid://8131033444" 
-        petal.ImageColor3 = Color3.fromRGB(255, 170, 200) 
+        petal.Image = "rbxassetid://8131033444"
+        petal.ImageColor3 = Color3.fromRGB(255, 170, 200)
         petal.ImageTransparency = math.random(30, 60) / 100
         petal.Rotation = math.random(0, 360)
         
@@ -654,7 +653,7 @@ task.spawn(function()
             petal:Destroy()
         end)
 
-        task.wait(0.3)
+        task.wait(math.random(2, 5) / 10) -- 随机飘落密度，更有层次感
     end
 end)
 

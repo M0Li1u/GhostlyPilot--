@@ -666,13 +666,15 @@ task.spawn(function()
         local waitTime
         
         if isSakura then
-            petal.TextSize = math.random(35, 65)
-            petal.Size = UDim2.fromOffset(75, 75)
+            -- 🌸 樱花粉：超大 + 极速 + 暴雨密度
+            petal.TextSize = math.random(40, 70) -- 再稍微大一点
+            petal.Size = UDim2.fromOffset(80, 80)
             petal.TextTransparency = math.random(10, 40) / 100
-            fallTime = math.random(1, 2)
+            fallTime = math.random(1, 2.5)
             endXOffset = math.random(-200, 200)
-            waitTime = math.random(1, 3) / 10
+            waitTime = math.random(1, 5) / 100 -- 👈 核心！改成 0.01 ~ 0.05 秒生成一个，真正的暴雨
         else
+            -- 其他主题保持原样
             petal.TextSize = math.random(14, 26)
             petal.Size = UDim2.fromOffset(30, 30)
             petal.TextTransparency = math.random(10, 50) / 100
@@ -681,8 +683,11 @@ task.spawn(function()
             waitTime = math.random(3, 8) / 10
         end
         
-        local startX = math.random(0, 620)
-        petal.Position = UDim2.new(0, startX, 0, -100)
+        -- 👈 核心！不管在哪里生成，都随机撒在屏幕上，而不是只从顶部掉
+        local startX = math.random(-100, 700)
+        local startY = math.random(-100, 380) 
+        
+        petal.Position = UDim2.new(0, startX, 0, startY)
         petal.ZIndex = 1
         petal.Parent = SakuraFrame
 
@@ -691,7 +696,7 @@ task.spawn(function()
         petal.Rotation = randomRot
 
         local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
-            Position = UDim2.new(0, endX, 1, 100),
+            Position = UDim2.new(0, endX, 1, 400), -- 掉到屏幕下面去
             Rotation = randomRot + math.random(360, 720)
         })
         tween:Play()

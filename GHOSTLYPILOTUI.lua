@@ -613,6 +613,7 @@ local function buildBaseUI()
 -- ============================================================
 -- 动态壁纸
 -- ============================================================
+-- 动态壁纸
 local SakuraFrame = Instance.new("Frame")
 SakuraFrame.Name = "SakuraWallpaper"
 SakuraFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -624,10 +625,8 @@ SakuraFrame.Parent = MainCard
 Instance.new("UICorner", SakuraFrame).CornerRadius = UDim.new(0, 16)
 Library.Globals.SakuraFrame = SakuraFrame
 
--- 绑定背景颜色到主题
 Library:_BindTheme(SakuraFrame, function()
     local c = Library.Theme.Accent
-    -- 将主题色稍微变浅，作为壁纸底色
     return Color3.new(
         math.min(c.R * 0.2 + 0.8, 1),
         math.min(c.G * 0.2 + 0.8, 1),
@@ -635,20 +634,18 @@ Library:_BindTheme(SakuraFrame, function()
     )
 end)
 
--- 根据主题选择不同的 Emoji 图案
 local function GetThemeEmojis()
     local themeAccent = Library.Theme.Accent
-    -- 简单通过颜色判断主题
     if themeAccent.R > 0.8 and themeAccent.B < 0.5 then
-        return {"🍁", "🍁", "🍁"}, Color3.fromRGB(255, 150, 150) -- 烈焰红
+        return {"🔥"}, Color3.fromRGB(255, 150, 150)
     elseif themeAccent.B > 0.8 and themeAccent.R < 0.5 then
-        return {"🐟", "💧", "❄️"}, Color3.fromRGB(150, 200, 255) -- 深海蓝
+        return {"💧"}, Color3.fromRGB(150, 200, 255)
     elseif themeAccent.G > 0.8 and themeAccent.R < 0.5 then
-        return {"🍃", "🌿"}, Color3.fromRGB(150, 255, 200) -- 薄荷绿
+        return {"🍃"}, Color3.fromRGB(150, 255, 200)
     elseif themeAccent.R > 0.3 and themeAccent.R < 0.6 and themeAccent.G < 0.3 then
-        return {"⭐", "✨", "🌙"}, Color3.fromRGB(200, 200, 200) -- 暗夜黑
+        return {"🌙"}, Color3.fromRGB(200, 200, 200)
     else
-        return {"🌸", "🌸", "🌷"}, Color3.fromRGB(255, 170, 200) -- 默认樱花粉
+        return {"🌸"}, Color3.fromRGB(255, 170, 200)
     end
 end
 
@@ -656,28 +653,45 @@ task.spawn(function()
     while SakuraFrame and SakuraFrame.Parent do
         local currentEmojis, tintColor = GetThemeEmojis()
         
+        local isSakura = (Library.Theme.Accent.R > 0.8 and Library.Theme.Accent.B > 0.8)
+        
         local petal = Instance.new("TextLabel")
         petal.BackgroundTransparency = 1
-        petal.Text = currentEmojis[math.random(1, #currentEmojis)]
         petal.Font = Enum.Font.GothamBold
-        petal.TextSize = math.random(14, 26)
-        petal.TextTransparency = math.random(10, 50) / 100
+        petal.Text = currentEmojis[1]
         petal.TextColor3 = tintColor
-        petal.Size = UDim2.fromOffset(30, 30)
         
-        local startX = math.random(0, 600)
-        petal.Position = UDim2.new(0, startX, 0, -40)
+        local fallTime
+        local endXOffset
+        local waitTime
+        
+        if isSakura then
+            petal.TextSize = math.random(35, 65)
+            petal.Size = UDim2.fromOffset(75, 75)
+            petal.TextTransparency = math.random(10, 40) / 100
+            fallTime = math.random(1, 2)
+            endXOffset = math.random(-200, 200)
+            waitTime = math.random(1, 3) / 10
+        else
+            petal.TextSize = math.random(14, 26)
+            petal.Size = UDim2.fromOffset(30, 30)
+            petal.TextTransparency = math.random(10, 50) / 100
+            fallTime = math.random(4, 8)
+            endXOffset = math.random(-150, 150)
+            waitTime = math.random(3, 8) / 10
+        end
+        
+        local startX = math.random(0, 620)
+        petal.Position = UDim2.new(0, startX, 0, -100)
         petal.ZIndex = 1
         petal.Parent = SakuraFrame
 
-        local fallTime = math.random(4, 8)
-        local endX = startX + math.random(-150, 150)
+        local endX = startX + endXOffset
         local randomRot = math.random(0, 360)
-
         petal.Rotation = randomRot
 
         local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
-            Position = UDim2.new(0, endX, 1, 40),
+            Position = UDim2.new(0, endX, 1, 100),
             Rotation = randomRot + math.random(360, 720)
         })
         tween:Play()
@@ -686,7 +700,7 @@ task.spawn(function()
             petal:Destroy()
         end)
 
-        task.wait(math.random(3, 8) / 10)
+        task.wait(waitTime)
     end
 end)
 
@@ -761,7 +775,7 @@ end)
     LeftPanel.Size = UDim2.new(0, 180, 1, -20)
     LeftPanel.Position = UDim2.new(0, 10, 0, 10)
     LeftPanel.BackgroundColor3 = Library.Theme.PanelBg
-    LeftPanel.BackgroundTransparency = 0.75
+    LeftPanel.BackgroundTransparency = 0.4
     LeftPanel.BorderSizePixel = 0
     LeftPanel.ClipsDescendants = true
     LeftPanel.Parent = MainCard
@@ -883,7 +897,7 @@ end)
     RightPanel.Size = UDim2.new(1, -204, 1, -60)
     RightPanel.Position = UDim2.new(0, 194, 0, 50)
     RightPanel.BackgroundColor3 = Library.Theme.CardBg
-    RightPanel.BackgroundTransparency = 0.82
+    RightPanel.BackgroundTransparency = 0
     RightPanel.BorderSizePixel = 0
     RightPanel.ScrollBarThickness = 4
     RightPanel.ScrollBarImageColor3 = Library.Theme.Stroke
@@ -2037,8 +2051,8 @@ end
 local function playLoader(onFinish)
     task.spawn(function()
         local ok, err = pcall(function()
-            local MAIN_TEXT = "GhostlyPilot"
-            local SUB_TEXT = "茉莉璐"
+            local MAIN_TEXT = "GhostlyPilotUI"
+            local SUB_TEXT = "UI作者：茉莉璐"
             local HOLD_TIME = 1.5
             local LETTER_FLY_TIME = 0.25
             local LETTER_STAGGER = 0.05

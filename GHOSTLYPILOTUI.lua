@@ -611,101 +611,103 @@ local function buildBaseUI()
     Library.Globals.MainGradient = MainGradient
     
 -- ============================================================
--- 动态壁纸
+-- 🌸 婉月 UI 终极视觉复刻版 (高透底 + 暗纹背景 + 大花瓣)
 -- ============================================================
--- 动态壁纸
 local SakuraFrame = Instance.new("Frame")
 SakuraFrame.Name = "SakuraWallpaper"
 SakuraFrame.Size = UDim2.new(1, 0, 1, 0)
-SakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 235, 240)
-SakuraFrame.BackgroundTransparency = 0.5 
+-- 把底色调成半透明白，让后面的 3D 场景透出来
+SakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+SakuraFrame.BackgroundTransparency = 0.35 
 SakuraFrame.ZIndex = 1
 SakuraFrame.ClipsDescendants = true
 SakuraFrame.Parent = MainCard
 Instance.new("UICorner", SakuraFrame).CornerRadius = UDim.new(0, 16)
 Library.Globals.SakuraFrame = SakuraFrame
 
-Library:_BindTheme(SakuraFrame, function()
-    local c = Library.Theme.Accent
-    return Color3.new(
-        math.min(c.R * 0.2 + 0.8, 1),
-        math.min(c.G * 0.2 + 0.8, 1),
-        math.min(c.B * 0.2 + 0.8, 1)
-    )
-end)
+-- 第一层：铺满整个背景的樱花暗纹贴图 (复刻图里的底纹)
+local bgPattern = Instance.new("ImageLabel")
+bgPattern.Size = UDim2.new(1, 0, 1, 0)
+bgPattern.BackgroundTransparency = 1
+-- 用的是一张超大的樱花纹理图，平铺模式
+bgPattern.Image = "rbxassetid://1316045217"
+bgPattern.ScaleType = Enum.ScaleType.Crop
+bgPattern.ImageTransparency = 0.75 -- 透明度极高，只做暗纹
+bgPattern.ZIndex = 1
+bgPattern.Parent = SakuraFrame
+Instance.new("UICorner", bgPattern).CornerRadius = UDim.new(0, 16)
 
-local function GetThemeEmojis()
-    local themeAccent = Library.Theme.Accent
-    if themeAccent.R > 0.8 and themeAccent.B < 0.5 then
-        return {"🔥"}, Color3.fromRGB(255, 150, 150)
-    elseif themeAccent.B > 0.8 and themeAccent.R < 0.5 then
-        return {"💧"}, Color3.fromRGB(150, 200, 255)
-    elseif themeAccent.G > 0.8 and themeAccent.R < 0.5 then
-        return {"🍃"}, Color3.fromRGB(150, 255, 200)
-    elseif themeAccent.R > 0.3 and themeAccent.R < 0.6 and themeAccent.G < 0.3 then
-        return {"🌙"}, Color3.fromRGB(200, 200, 200)
-    else
-        return {"🌸"}, Color3.fromRGB(255, 170, 200)
-    end
-end
-
+-- 第二层：动态飘落的大花瓣贴图 (复刻图里飘落的花瓣)
 task.spawn(function()
+    local petalImage = "rbxassetid://8131033444" -- 高质量樱花花瓣
+    
     while SakuraFrame and SakuraFrame.Parent do
-        local currentEmojis, tintColor = GetThemeEmojis()
-        
+        -- 只有樱花粉主题才下“暴雨”，其他主题保持安静
         local isSakura = (Library.Theme.Accent.R > 0.8 and Library.Theme.Accent.B > 0.8)
         
-        local petal = Instance.new("TextLabel")
+        local petal = Instance.new("ImageLabel")
         petal.BackgroundTransparency = 1
-        petal.Font = Enum.Font.GothamBold
-        petal.Text = currentEmojis[1]
-        petal.TextColor3 = tintColor
-        
-        local fallTime
-        local endXOffset
-        local waitTime
+        petal.Image = petalImage
         
         if isSakura then
-            -- 🌸 樱花粉：超大 + 极速 + 暴雨密度
-            petal.TextSize = math.random(40, 70) -- 再稍微大一点
-            petal.Size = UDim2.fromOffset(80, 80)
-            petal.TextTransparency = math.random(10, 40) / 100
-            fallTime = math.random(1, 2.5)
-            endXOffset = math.random(-200, 200)
-            waitTime = math.random(1, 5) / 100 -- 👈 核心！改成 0.01 ~ 0.05 秒生成一个，真正的暴雨
+            -- 樱花粉专属：大花瓣、半透明、极速
+            petal.ImageColor3 = Color3.fromRGB(255, 182, 193)
+            petal.ImageTransparency = math.random(40, 70) / 100 
+            
+            -- 👇 花瓣大小：60 到 110 像素，非常大
+            local pSize = math.random(60, 110)
+            petal.Size = UDim2.fromOffset(pSize, pSize)
+            
+            local startX = math.random(-50, 650)
+            petal.Position = UDim2.new(0, startX, 0, -100)
+            petal.ZIndex = 2 -- 压在上面
+            petal.Parent = SakuraFrame
+
+            local fallTime = math.random(15, 30) / 10 -- 1.5 到 3 秒落到底
+            local endX = startX + math.random(-100, 100)
+            local startRot = math.random(0, 360)
+            petal.Rotation = startRot
+
+            local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
+                Position = UDim2.new(0, endX, 1, 100),
+                Rotation = startRot + math.random(180, 360)
+            })
+            tween:Play()
+
+            tween.Completed:Connect(function()
+                petal:Destroy()
+            end)
+
+            -- 密度：每 0.01 ~ 0.05 秒出一个，满屏乱飞
+            task.wait(math.random(1, 5) / 100)
         else
-            -- 其他主题保持原样
-            petal.TextSize = math.random(14, 26)
+            -- 其他主题换成 Emoji
+            petal.Image = ""
+            local themeAccent = Library.Theme.Accent
+            if themeAccent.B > 0.8 then petal.Text = "💧"
+            elseif themeAccent.G > 0.8 then petal.Text = "🍃"
+            elseif themeAccent.R > 0.8 and themeAccent.B < 0.5 then petal.Text = "🍁"
+            elseif themeAccent.R > 0.3 and themeAccent.R < 0.6 then petal.Text = "🌙"
+            else petal.Text = "🌸" end
+            
+            petal.Font = Enum.Font.GothamBold
+            petal.TextSize = 25
+            petal.TextColor3 = themeAccent
+            petal.TextTransparency = 0.4
             petal.Size = UDim2.fromOffset(30, 30)
-            petal.TextTransparency = math.random(10, 50) / 100
-            fallTime = math.random(4, 8)
-            endXOffset = math.random(-150, 150)
-            waitTime = math.random(3, 8) / 10
+            
+            petal.Position = UDim2.new(0, math.random(0, 600), 0, -40)
+            petal.ZIndex = 2
+            petal.Parent = SakuraFrame
+            
+            local tween = TweenService:Create(petal, TweenInfo.new(math.random(4, 8), Enum.EasingStyle.Linear), {
+                Position = UDim2.new(0, petal.Position.X.Offset, 1, 40),
+                Rotation = math.random(0, 360) + 360
+            })
+            tween:Play()
+            tween.Completed:Connect(function() petal:Destroy() end)
+            task.wait(math.random(3, 8) / 10)
         end
-        
-        -- 👈 核心！不管在哪里生成，都随机撒在屏幕上，而不是只从顶部掉
-        local startX = math.random(-100, 700)
-        local startY = math.random(-100, 380) 
-        
-        petal.Position = UDim2.new(0, startX, 0, startY)
-        petal.ZIndex = 1
-        petal.Parent = SakuraFrame
-
-        local endX = startX + endXOffset
-        local randomRot = math.random(0, 360)
-        petal.Rotation = randomRot
-
-        local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
-            Position = UDim2.new(0, endX, 1, 400), -- 掉到屏幕下面去
-            Rotation = randomRot + math.random(360, 720)
-        })
-        tween:Play()
-
-        tween.Completed:Connect(function()
-            petal:Destroy()
-        end)
-
-        task.wait(waitTime)
     end
 end)
 
@@ -780,7 +782,7 @@ end)
     LeftPanel.Size = UDim2.new(0, 180, 1, -20)
     LeftPanel.Position = UDim2.new(0, 10, 0, 10)
     LeftPanel.BackgroundColor3 = Library.Theme.PanelBg
-    LeftPanel.BackgroundTransparency = 0.4
+    LeftPanel.BackgroundTransparency = 0.3
     LeftPanel.BorderSizePixel = 0
     LeftPanel.ClipsDescendants = true
     LeftPanel.Parent = MainCard
@@ -902,7 +904,7 @@ end)
     RightPanel.Size = UDim2.new(1, -204, 1, -60)
     RightPanel.Position = UDim2.new(0, 194, 0, 50)
     RightPanel.BackgroundColor3 = Library.Theme.CardBg
-    RightPanel.BackgroundTransparency = 0
+    RightPanel.BackgroundTransparency = 0.1
     RightPanel.BorderSizePixel = 0
     RightPanel.ScrollBarThickness = 4
     RightPanel.ScrollBarImageColor3 = Library.Theme.Stroke

@@ -1,7 +1,7 @@
 -- ============================================================
 -- GhostlyPilotUI - YC API Wrapper
 -- Author: 茉莉璐 With Deepseek
--- Version: 2.2.1
+-- Version: 2.2.3(累死我了你们知道吗)
 -- ============================================================
 
 if _G.GhostlyPilotUI_Loaded then
@@ -13,7 +13,7 @@ if _G.GhostlyPilotUI_Loaded then
 end
 
 local Library = {}
-local VERSION = "2.2.1"
+local VERSION = "2.2.3"
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -619,8 +619,8 @@ local SakuraFrame = Instance.new("Frame")
 SakuraFrame.Name = "SakuraWallpaper"
 SakuraFrame.Size = UDim2.new(1, 0, 1, 0)
 SakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 235, 240)
-SakuraFrame.BackgroundTransparency = 0.2
-SakuraFrame.ZIndex = 1
+SakuraFrame.BackgroundTransparency = 0.35
+SakuraFrame.ZIndex = 0
 SakuraFrame.ClipsDescendants = true
 SakuraFrame.Parent = MainCard
 Instance.new("UICorner", SakuraFrame).CornerRadius = UDim.new(0, 16)
@@ -637,7 +637,7 @@ task.spawn(function()
         
         local startX = math.random(0, 600)
         petal.Position = UDim2.new(0, startX, 0, -30)
-        petal.ZIndex = 1
+        petal.ZIndex = 0
         petal.Parent = SakuraFrame
 
         local fallTime = math.random(3, 8)
@@ -728,7 +728,7 @@ end)
     LeftPanel.Size = UDim2.new(0, 180, 1, -20)
     LeftPanel.Position = UDim2.new(0, 10, 0, 10)
     LeftPanel.BackgroundColor3 = Library.Theme.PanelBg
-    LeftPanel.BackgroundTransparency = 0
+    LeftPanel.BackgroundTransparency = 0.75
     LeftPanel.BorderSizePixel = 0
     LeftPanel.ClipsDescendants = true
     LeftPanel.Parent = MainCard
@@ -850,7 +850,7 @@ end)
     RightPanel.Size = UDim2.new(1, -204, 1, -60)
     RightPanel.Position = UDim2.new(0, 194, 0, 50)
     RightPanel.BackgroundColor3 = Library.Theme.CardBg
-    RightPanel.BackgroundTransparency = 0
+    RightPanel.BackgroundTransparency = 0.82
     RightPanel.BorderSizePixel = 0
     RightPanel.ScrollBarThickness = 4
     RightPanel.ScrollBarImageColor3 = Library.Theme.Stroke
@@ -1275,52 +1275,65 @@ Content.ChildAdded:Connect(function(child)
     end 
 end)
 
-    local function toggle()
-        isToggled = not isToggled
-        SwitchBtn:SetAttribute("IsOn", isToggled)
-        updateSwitchVisual()
-        Library:Notify(title, isToggled)
-        if isToggled then
-            Library:AddStatus(title)
-        else
-            Library:RemoveStatus(title)
-        end
-        if onToggle then pcall(onToggle, isToggled) end
+local isToggled = false
+local function updateSwitchVisual()
+    TweenService:Create(SwitchBtn, TweenInfo.new(0.2), {
+        BackgroundColor3 = isToggled and Library.Theme.Accent or Library.Theme.Off
+    }):Play()
+    TweenService:Create(Knob, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+        Position = isToggled and UDim2.new(1, -14, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
+    }):Play()
+end
+
+local function toggle()
+    isToggled = not isToggled
+    SwitchBtn:SetAttribute("IsOn", isToggled)
+    updateSwitchVisual()
+    Library:Notify(title, isToggled)
+    if isToggled then
+        Library:AddStatus(title)
+    else
+        Library:RemoveStatus(title)
     end
+    if onToggle then pcall(onToggle, isToggled) end
+end
 
-    SwitchBtn.MouseButton1Click:Connect(toggle)
+SwitchBtn.MouseButton1Click:Connect(toggle)
 
-    local titleClick = Instance.new("TextButton")
-    titleClick.Size = UDim2.new(1, -130, 1, 0)
-    titleClick.Position = UDim2.new(0, 40, 0, 0)
-    titleClick.BackgroundTransparency = 1
-    titleClick.Text = ""
-    titleClick.Parent = Header
-    titleClick.MouseButton1Click:Connect(toggle)
+local titleClick = Instance.new("TextButton")
+titleClick.Size = UDim2.new(1, -130, 1, 0)
+titleClick.Position = UDim2.new(0, 40, 0, 0)
+titleClick.BackgroundTransparency = 1
+titleClick.Text = ""
+titleClick.Parent = Header
+titleClick.MouseButton1Click:Connect(toggle)
 
-    MoreBtn.MouseButton1Click:Connect(function()
-        open = not open
-        MoreBtn:SetAttribute("IsOpen", open)
-        MoreBtn.Text = open and "−" or "+"
-        if open then
-            Content.Visible = true
-            task.wait()
-            refreshHeight()
-            TweenService:Create(MoreBtn, TweenInfo.new(0.2), {
-                BackgroundColor3 = Library.Theme.Accent,
-                TextColor3 = Color3.fromRGB(255, 255, 255)
-            }):Play()
-        else
-            TweenService:Create(Row, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, ROW_H)}):Play()
-            task.delay(0.25, function()
-                if not open then Content.Visible = false end
-            end)
-            TweenService:Create(MoreBtn, TweenInfo.new(0.2), {
-                BackgroundColor3 = LighterColor(Library.Theme.CardBg, 0.04),
-                TextColor3 = Library.Theme.OffText
-            }):Play()
-        end
-    end)
+MoreBtn.MouseButton1Click:Connect(function()
+    open = not open
+    MoreBtn:SetAttribute("IsOpen", open)
+    MoreBtn.Text = open and "−" or "+"
+    
+    if open then
+        Content.Visible = true
+        currentHeight = ROW_H
+        task.wait()
+        refreshHeight()
+        TweenService:Create(MoreBtn, TweenInfo.new(0.2), {
+            BackgroundColor3 = Library.Theme.Accent,
+            TextColor3 = Color3.fromRGB(255, 255, 255)
+        }):Play()
+    else
+        currentHeight = ROW_H
+        TweenService:Create(Row, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, ROW_H)}):Play()
+        task.delay(0.25, function()
+            if not open then Content.Visible = false end
+        end)
+        TweenService:Create(MoreBtn, TweenInfo.new(0.2), {
+            BackgroundColor3 = LighterColor(Library.Theme.CardBg, 0.04),
+            TextColor3 = Library.Theme.OffText
+        }):Play()
+    end
+end)
 
     return Row, MoreBtn, Content
 end
@@ -1544,7 +1557,8 @@ function Library:AddDropdown(parent, txt, opts, callback, multiple, cfgKey)
     for _, o in ipairs(opts) do
         local isSel = false
         for _, v in ipairs(selected) do
-            if v == o then isSel = true; break end        end
+            if v == o then isSel = true; break end        
+        end
         local Ob = Instance.new("TextButton")
         Ob.Parent = Opts
         Ob.Size = UDim2.new(1, 0, 0, optH)
@@ -1596,9 +1610,6 @@ function Library:AddDropdown(parent, txt, opts, callback, multiple, cfgKey)
     return Base
 end
 
--- ============================================================
--- 控件：Input
--- ============================================================
 function Library:AddInput(parent, text, placeholder, callback, cfgKey)
     local BoxH = 34
     local Container = Instance.new("Frame")
@@ -1643,9 +1654,6 @@ function Library:AddInput(parent, text, placeholder, callback, cfgKey)
     end)
 end
 
--- ============================================================
--- 控件：ColorPicker
--- ============================================================
 function Library:AddColorPicker(parent, txt, defaultColor, callback, cfgKey)
     local saved = self:GetConfig(cfgKey, nil)
     local selectedColor = saved or defaultColor or Color3.fromRGB(255, 255, 255)
@@ -1940,9 +1948,6 @@ function Library:AddColorPicker(parent, txt, defaultColor, callback, cfgKey)
     return settings
 end
 
--- ============================================================
--- 控件：ActionButton
--- ============================================================
 function Library:AddActionButton(parent, title, callback, icon)
     local Btn = Instance.new("TextButton")
     Btn.Size = UDim2.new(1, 0, 0, 40)
@@ -1996,15 +2001,12 @@ function Library:AddActionButton(parent, title, callback, icon)
     return Btn
 end
 
--- ============================================================
--- 开场加载动画
--- ============================================================
 local function playLoader(onFinish)
     task.spawn(function()
         local ok, err = pcall(function()
             local MAIN_TEXT = "GhostlyPilotUI"
             local SUB_TEXT = "UI作者：茉莉璐"
-            local HOLD_TIME = 3
+            local HOLD_TIME = 1.5
             local LETTER_FLY_TIME = 0.25
             local LETTER_STAGGER = 0.05
             local TEXT_COLOR = Color3.fromRGB(40, 40, 40)
@@ -2135,9 +2137,6 @@ local function playLoader(onFinish)
     end)
 end
 
--- ============================================================
--- DestroyUI
--- ============================================================
 function Library:DestroyUI()
     pcall(function() self:Notify("UI 已删除", false) end)
     task.wait(0.3)
@@ -2173,9 +2172,6 @@ function Library:DestroyUI()
     self.Globals.MainGradient = nil
 end
 
--- ============================================================
--- 内置分类（设置）
--- ============================================================
 function Library:_BuildBuiltinWindows()
     local SettingsWin = self:CreateChildWindow("设置")
 
@@ -2215,9 +2211,6 @@ function Library:_BuildBuiltinWindows()
     end
 end
 
--- ============================================================
--- Init
--- ============================================================
 function Library:Init()
     if self.Globals.Initialized then
         warn("[GhostlyPilotUI] 已初始化")

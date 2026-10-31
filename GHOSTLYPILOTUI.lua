@@ -611,93 +611,89 @@ local function buildBaseUI()
     Library.Globals.MainGradient = MainGradient
     
 -- ============================================================
--- 🌸 婉月 UI 终极视觉复刻版 (高透底 + 暗纹背景 + 大花瓣)
+-- 🌸 纯代码高仿“婉月 UI” (无外部贴图，纯樱花粉)
 -- ============================================================
 local SakuraFrame = Instance.new("Frame")
 SakuraFrame.Name = "SakuraWallpaper"
 SakuraFrame.Size = UDim2.new(1, 0, 1, 0)
--- 把底色调成半透明白，让后面的 3D 场景透出来
-SakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-SakuraFrame.BackgroundTransparency = 0.35 
+SakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 235, 245)
+SakuraFrame.BackgroundTransparency = 0.25
 SakuraFrame.ZIndex = 1
 SakuraFrame.ClipsDescendants = true
 SakuraFrame.Parent = MainCard
 Instance.new("UICorner", SakuraFrame).CornerRadius = UDim.new(0, 16)
 Library.Globals.SakuraFrame = SakuraFrame
 
--- 第一层：铺满整个背景的樱花暗纹贴图 (复刻图里的底纹)
-local bgPattern = Instance.new("ImageLabel")
-bgPattern.Size = UDim2.new(1, 0, 1, 0)
-bgPattern.BackgroundTransparency = 1
--- 用的是一张超大的樱花纹理图，平铺模式
-bgPattern.Image = "rbxassetid://1316045217"
-bgPattern.ScaleType = Enum.ScaleType.Crop
-bgPattern.ImageTransparency = 0.75 -- 透明度极高，只做暗纹
-bgPattern.ZIndex = 1
-bgPattern.Parent = SakuraFrame
-Instance.new("UICorner", bgPattern).CornerRadius = UDim.new(0, 16)
+local patternHolder = Instance.new("Frame")
+patternHolder.Size = UDim2.new(1, 0, 1, 0)
+patternHolder.BackgroundTransparency = 1
+patternHolder.ZIndex = 1
+patternHolder.Parent = SakuraFrame
+
+for i = 1, 6 do
+    local petalBg = Instance.new("Frame")
+    petalBg.Size = UDim2.new(0, math.random(150, 250), 0, math.random(150, 250))
+    petalBg.Position = UDim2.new(math.random(-10, 90)/100, 0, math.random(-10, 90)/100, 0)
+    petalBg.BackgroundColor3 = Color3.fromRGB(255, 192, 203)
+    petalBg.BackgroundTransparency = 0.85 
+    petalBg.Rotation = math.random(0, 360)
+    petalBg.ZIndex = 1
+    petalBg.Parent = patternHolder
+    Instance.new("UICorner", petalBg).CornerRadius = UDim.new(1, 0)
+end
 
 task.spawn(function()
-    while true do
-        task.wait(0.5)
-        local playerGui = game:GetService("Players").LocalPlayer:FindFirstChild("PlayerGui")
-        local gui = playerGui and (playerGui:FindFirstChild("GhostlyPilotUI") or playerGui:FindFirstChild("GhostlyPilot_Loader"))
-        local mainCard = gui and gui:FindFirstChild("MainCard")
+    while SakuraFrame and SakuraFrame.Parent do
+        local isSakura = (Library.Theme.Accent.R > 0.8 and Library.Theme.Accent.B > 0.8)
         
-        if mainCard and not mainCard:FindFirstChild("MyCustomSakura") then
-            local sakuraFrame = Instance.new("Frame")
-            sakuraFrame.Name = "MyCustomSakura"
-            sakuraFrame.Size = UDim2.new(1, 0, 1, 0)
-            sakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 235, 245)
-            sakuraFrame.BackgroundTransparency = 0.5 
-            sakuraFrame.ZIndex = 1
-            sakuraFrame.ClipsDescendants = true
-            sakuraFrame.Parent = mainCard
-            Instance.new("UICorner", sakuraFrame).CornerRadius = UDim.new(0, 16)
-            
-            mainCard.ChildAdded:Connect(function(child)
-                if child:IsA("GuiObject") and child ~= sakuraFrame then
-                    child.ZIndex = math.max(child.ZIndex, 2)
-                end
-            end)
+        local petal = Instance.new("TextLabel")
+        petal.BackgroundTransparency = 1
+        
+        if isSakura then
+            petal.Text = "🌸"
+            petal.Font = Enum.Font.GothamBold
+            petal.TextColor3 = Color3.fromRGB(255, 150, 180)
+            petal.TextTransparency = math.random(20, 50) / 100 
+            petal.TextSize = math.random(40, 80)
+            petal.Size = UDim2.fromOffset(100, 100)
+        else
+            local currentEmojis, tintColor = GetThemeEmojis()
+            petal.Text = currentEmojis[1]
+            petal.Font = Enum.Font.GothamBold
+            petal.TextSize = math.random(14, 26)
+            petal.TextTransparency = math.random(10, 50) / 100
+            petal.TextColor3 = tintColor
+            petal.Size = UDim2.fromOffset(30, 30)
+        end
+        
+        local startX = math.random(-50, 650)
+        petal.Position = UDim2.new(0, startX, 0, -100)
+        petal.ZIndex = 2
+        petal.Parent = SakuraFrame
 
-            task.spawn(function()
-                while sakuraFrame and sakuraFrame.Parent do
-                    local petal = Instance.new("TextLabel")
-                    petal.BackgroundTransparency = 1
-                    petal.Text = "🌸"
-                    petal.Font = Enum.Font.GothamBold
-                    petal.TextColor3 = Color3.fromRGB(255, 150, 180)
-                    petal.TextTransparency = math.random(20, 50) / 100 
-                    
-                    local pSize = math.random(40, 80)
-                    petal.TextSize = pSize
-                    petal.Size = UDim2.fromOffset(100, 100)
-                    
-                    local startX = math.random(-50, 650)
-                    petal.Position = UDim2.new(0, startX, 0, -100)
-                    petal.ZIndex = 2
-                    petal.Parent = sakuraFrame
+        local fallTime = isSakura and (math.random(10, 25) / 10) or math.random(4, 8)
+        local endX = startX + math.random(-100, 100)
+        local startRot = math.random(0, 360)
+        petal.Rotation = startRot
 
-                    local fallTime = math.random(10, 20) / 10
-                    local endX = startX + math.random(-100, 100)
-                    local startRot = math.random(0, 360)
-                    petal.Rotation = startRot
+        local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
+            Position = UDim2.new(0, endX, 1, 100),
+            Rotation = startRot + math.random(180, 360)
+        })
+        tween:Play()
 
-                    local tween = game:GetService("TweenService"):Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
-                        Position = UDim2.new(0, endX, 1, 100),
-                        Rotation = startRot + math.random(180, 360)
-                    })
-                    tween:Play()
+        tween.Completed:Connect(function()
+            petal:Destroy()
+        end)
 
-                    tween.Completed:Connect(function() petal:Destroy() end)
-                    task.wait(math.random(2, 5) / 100)
-                end
-            end)
+        if isSakura then
+            task.wait(math.random(2, 5) / 100)
+        else
+            task.wait(math.random(3, 8) / 10)
         end
     end
 end)
-
+    
     -- 通知容器
     local NotifHolder = Instance.new("Frame")
     NotifHolder.Name = "NotifHolder"

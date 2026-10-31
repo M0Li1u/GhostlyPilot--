@@ -611,49 +611,82 @@ local function buildBaseUI()
     Library.Globals.MainGradient = MainGradient
     
 -- ============================================================
--- 🌸 高配动态樱花壁纸 (极致还原版)
+-- 动态壁纸
 -- ============================================================
-MainCard.BackgroundTransparency = 0.15 
-
 local SakuraFrame = Instance.new("Frame")
 SakuraFrame.Name = "SakuraWallpaper"
 SakuraFrame.Size = UDim2.new(1, 0, 1, 0)
 SakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 235, 240)
-SakuraFrame.BackgroundTransparency = 0.35
-SakuraFrame.ZIndex = 0
+SakuraFrame.BackgroundTransparency = 0.5 
+SakuraFrame.ZIndex = 1
 SakuraFrame.ClipsDescendants = true
 SakuraFrame.Parent = MainCard
 Instance.new("UICorner", SakuraFrame).CornerRadius = UDim.new(0, 16)
+Library.Globals.SakuraFrame = SakuraFrame
+
+-- 绑定背景颜色到主题
+Library:_BindTheme(SakuraFrame, function()
+    local c = Library.Theme.Accent
+    -- 将主题色稍微变浅，作为壁纸底色
+    return Color3.new(
+        math.min(c.R * 0.2 + 0.8, 1),
+        math.min(c.G * 0.2 + 0.8, 1),
+        math.min(c.B * 0.2 + 0.8, 1)
+    )
+end)
+
+-- 根据主题选择不同的 Emoji 图案
+local function GetThemeEmojis()
+    local themeAccent = Library.Theme.Accent
+    -- 简单通过颜色判断主题
+    if themeAccent.R > 0.8 and themeAccent.B < 0.5 then
+        return {"🍁", "🔥"}, Color3.fromRGB(255, 150, 150) -- 烈焰红
+    elseif themeAccent.B > 0.8 and themeAccent.R < 0.5 then
+        return {"🫧", "💧"}, Color3.fromRGB(150, 200, 255) -- 深海蓝
+    elseif themeAccent.G > 0.8 and themeAccent.R < 0.5 then
+        return {"🍃", "🌿"}, Color3.fromRGB(150, 255, 200) -- 薄荷绿
+    elseif themeAccent.R > 0.3 and themeAccent.R < 0.6 and themeAccent.G < 0.3 then
+        return {"⭐", "✨", "🌙"}, Color3.fromRGB(200, 200, 200) -- 暗夜黑
+    else
+        return {"🌸", "🌸", "🌺"}, Color3.fromRGB(255, 170, 200) -- 默认樱花粉
+    end
+end
 
 task.spawn(function()
     while SakuraFrame and SakuraFrame.Parent do
-        local petal = Instance.new("ImageLabel")
-        petal.Size = UDim2.fromOffset(math.random(15, 30), math.random(15, 30))
+        local currentEmojis, tintColor = GetThemeEmojis()
+        
+        local petal = Instance.new("TextLabel")
         petal.BackgroundTransparency = 1
-        petal.Image = "rbxassetid://8131033444"
-        petal.ImageColor3 = Color3.fromRGB(255, 170, 200)
-        petal.ImageTransparency = math.random(30, 60) / 100
-        petal.Rotation = math.random(0, 360)
+        petal.Text = currentEmojis[math.random(1, #currentEmojis)]
+        petal.Font = Enum.Font.GothamBold
+        petal.TextSize = math.random(14, 26)
+        petal.TextTransparency = math.random(10, 50) / 100
+        petal.TextColor3 = tintColor
+        petal.Size = UDim2.fromOffset(30, 30)
         
         local startX = math.random(0, 600)
-        petal.Position = UDim2.new(0, startX, 0, -30)
-        petal.ZIndex = 0
+        petal.Position = UDim2.new(0, startX, 0, -40)
+        petal.ZIndex = 1
         petal.Parent = SakuraFrame
 
-        local fallTime = math.random(3, 8)
+        local fallTime = math.random(4, 8)
         local endX = startX + math.random(-150, 150)
-        
+        local randomRot = math.random(0, 360)
+
+        petal.Rotation = randomRot
+
         local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
-            Position = UDim2.new(0, endX, 1, 30),
-            Rotation = petal.Rotation + math.random(180, 720)
+            Position = UDim2.new(0, endX, 1, 40),
+            Rotation = randomRot + math.random(360, 720)
         })
         tween:Play()
-        
+
         tween.Completed:Connect(function()
             petal:Destroy()
         end)
 
-        task.wait(math.random(2, 5) / 10) -- 随机飘落密度，更有层次感
+        task.wait(math.random(3, 8) / 10)
     end
 end)
 
@@ -2004,8 +2037,8 @@ end
 local function playLoader(onFinish)
     task.spawn(function()
         local ok, err = pcall(function()
-            local MAIN_TEXT = "GhostlyPilotUI"
-            local SUB_TEXT = "UI作者：茉莉璐"
+            local MAIN_TEXT = "GhostlyPilot"
+            local SUB_TEXT = "茉莉璐"
             local HOLD_TIME = 1.5
             local LETTER_FLY_TIME = 0.25
             local LETTER_STAGGER = 0.05

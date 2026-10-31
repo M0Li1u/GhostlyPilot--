@@ -625,10 +625,6 @@ SakuraFrame.ClipsDescendants = true
 SakuraFrame.Parent = MainCard
 Instance.new("UICorner", SakuraFrame).CornerRadius = UDim.new(0, 16)
 
-Library.Globals.LeftPanel.ZIndex = 2
-Library.Globals.RightPanel.ZIndex = 2
-Library.Globals.DragHolder.ZIndex = 10
-
 task.spawn(function()
     while SakuraFrame and SakuraFrame.Parent do
         local petal = Instance.new("ImageLabel")
@@ -740,7 +736,8 @@ end)
     Instance.new("UICorner", LeftPanel).CornerRadius = UDim.new(0, 12)
     Library.Globals.LeftPanel = LeftPanel
     Library:_BindTheme(LeftPanel, function() return Library.Theme.PanelBg end)
-
+    LeftPanel.ZIndex = 2
+    
     -- 标题区
     local HEADER_H = 150
     local LeftHeader = Instance.new("Frame")
@@ -866,6 +863,7 @@ end)
     Instance.new("UICorner", RightPanel).CornerRadius = UDim.new(0, 12)
     Library.Globals.RightPanel = RightPanel
     Library:_BindTheme(RightPanel, function() return Library.Theme.CardBg end)
+    RightPanel.ZIndex = 2
 
     local RightPad = Instance.new("UIPadding")
     RightPad.PaddingTop = UDim.new(0, 12)

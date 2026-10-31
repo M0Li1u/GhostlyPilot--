@@ -97,16 +97,16 @@ Library.Presets = {
 -- 当前主题
 -- ============================================================
 Library.Theme = {
-    Accent   = Color3.fromRGB(255, 120, 220),
-    Active   = Color3.fromRGB(120, 170, 255),
-    Slider   = Color3.fromRGB(120, 140, 255),
-    CardBg   = Color3.fromRGB(252, 252, 255),
-    PanelBg  = Color3.fromRGB(248, 248, 252),
-    Stroke   = Color3.fromRGB(235, 235, 240),
-    TextDark = Color3.fromRGB(40, 40, 45),
-    TextGray = Color3.fromRGB(130, 130, 145),
-    Off      = Color3.fromRGB(200, 200, 205),
-    OffText  = Color3.fromRGB(100, 100, 110),
+    Accent   = Color3.fromRGB(255, 150, 200),
+    Active   = Color3.fromRGB(255, 180, 220), 
+    Slider   = Color3.fromRGB(255, 120, 180),
+    CardBg   = Color3.fromRGB(255, 245, 248),
+    PanelBg  = Color3.fromRGB(255, 240, 245),
+    Stroke   = Color3.fromRGB(255, 200, 220),
+    TextDark = Color3.fromRGB(100, 50, 70),
+    TextGray = Color3.fromRGB(180, 130, 150),
+    Off      = Color3.fromRGB(240, 210, 220),
+    OffText  = Color3.fromRGB(150, 100, 120),
 }
 
 Library.COLOR_ON  = Library.Theme.Accent
@@ -609,6 +609,58 @@ local function buildBaseUI()
     }
     MainGradient.Parent = MainCard
     Library.Globals.MainGradient = MainGradient
+    
+-- ============================================================
+-- 樱花粉(2.0)
+-- ============================================================
+MainCard.BackgroundTransparency = 0.15 
+
+local SakuraFrame = Instance.new("Frame")
+SakuraFrame.Name = "SakuraWallpaper"
+SakuraFrame.Size = UDim2.new(1, 0, 1, 0)
+SakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 235, 240)
+SakuraFrame.BackgroundTransparency = 0.2
+SakuraFrame.ZIndex = 1
+SakuraFrame.ClipsDescendants = true
+SakuraFrame.Parent = MainCard
+Instance.new("UICorner", SakuraFrame).CornerRadius = UDim.new(0, 16)
+
+Library.Globals.LeftPanel.ZIndex = 2
+Library.Globals.RightPanel.ZIndex = 2
+Library.Globals.DragHolder.ZIndex = 10
+
+task.spawn(function()
+    while SakuraFrame and SakuraFrame.Parent do
+        local petal = Instance.new("ImageLabel")
+        petal.Name = "Petal"
+        petal.Size = UDim2.fromOffset(math.random(15, 30), math.random(15, 30)) 
+        petal.BackgroundTransparency = 1
+        petal.Image = "rbxassetid://8131033444" 
+        petal.ImageColor3 = Color3.fromRGB(255, 170, 200) 
+        petal.ImageTransparency = math.random(30, 60) / 100
+        petal.Rotation = math.random(0, 360)
+        
+        local startX = math.random(0, 600)
+        petal.Position = UDim2.new(0, startX, 0, -30)
+        petal.ZIndex = 1
+        petal.Parent = SakuraFrame
+
+        local fallTime = math.random(3, 8)
+        local endX = startX + math.random(-150, 150)
+        
+        local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
+            Position = UDim2.new(0, endX, 1, 30),
+            Rotation = petal.Rotation + math.random(180, 720)
+        })
+        tween:Play()
+        
+        tween.Completed:Connect(function()
+            petal:Destroy()
+        end)
+
+        task.wait(0.3)
+    end
+end)
 
     -- 通知容器
     local NotifHolder = Instance.new("Frame")
@@ -1173,6 +1225,7 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon)
     Content.ClipsDescendants = false
     Content.Visible = false
     Content.Parent = Row
+    self:_BindTheme(Content, function() return Library.Theme.CardBg end)
 
     local CPad = Instance.new("UIPadding")
     CPad.PaddingTop = UDim.new(0, PAD)
@@ -1187,29 +1240,29 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon)
     CLayout.SortOrder = Enum.SortOrder.LayoutOrder
     CLayout.Parent = Content
 
-    local open = false
-    local currentHeight = ROW_H
+local open = false
+local currentHeight = ROW_H
 
-    local function refreshHeight()
-        task.defer(function()
-            if not Content.Parent then return end
-            local layout = Content:FindFirstChildOfClass("UIListLayout")
-            local pad = Content:FindFirstChildOfClass("UIPadding")
-            local padTop = pad and pad.PaddingTop.Offset or 0
-            local padBottom = pad and pad.PaddingBottom.Offset or 0
-            
-            local contentH = 0
-            if layout then 
-                contentH = layout.AbsoluteContentSize.Y + padTop + padBottom + 15 
-            else 
-                contentH = Content.AbsoluteSize.Y 
-            end
-            
-            local targetHeight = open and (ROW_H + contentH) or ROW_H
-               
-            if currentHeight ~= targetHeight then
-                currentHeight = targetHeight
-                TweenService:Create(Row, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(1, 0, 0, targetHeight) }):Play()
+local function refreshHeight()
+    task.defer(function()
+        if not Content.Parent then return end
+        local layout = Content:FindFirstChildOfClass("UIListLayout")
+        local pad = Content:FindFirstChildOfClass("UIPadding")
+        local padTop = pad and pad.PaddingTop.Offset or 0
+        local padBottom = pad and pad.PaddingBottom.Offset or 0
+        
+        local contentH = 0
+        if layout then 
+            contentH = layout.AbsoluteContentSize.Y + padTop + padBottom + 15 
+        else 
+            contentH = Content.AbsoluteSize.Y 
+        end
+        
+        local targetHeight = open and (ROW_H + contentH) or ROW_H
+           
+        if currentHeight ~= targetHeight then
+            currentHeight = targetHeight
+            TweenService:Create(Row, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(1, 0, 0, targetHeight) }):Play()
         end
     end)
 end

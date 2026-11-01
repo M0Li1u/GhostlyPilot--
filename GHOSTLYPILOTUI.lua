@@ -2100,7 +2100,7 @@ local function playLoader(onFinish)
             -- 文字容器（包含主标题和副标题）
             local TextFrame = Instance.new("Frame")
             TextFrame.Size = UDim2.new(0, 400, 0, 200)
-            TextFrame.Position = UDim2.new(0.5, 50, 0.5, -80) -- 位于图标右侧
+            TextFrame.Position = UDim2.new(0.5, 10, 0.5, -80) -- 位于图标右侧
             TextFrame.BackgroundTransparency = 1
             TextFrame.ZIndex = 5
             TextFrame.Parent = Bg
@@ -2225,7 +2225,7 @@ local function playLoader(onFinish)
             end)
 
             TweenService:Create(UIIcon, TweenInfo.new(2.0, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                Position = UDim2.new(0.5, -150, 0.5, -50) -- 移到偏左的位置
+                Position = UDim2.new(0.5, -190, 0.5, -50) -- 移到偏左的位置
             }):Play()
             
             task.wait(2.0) -- 等待移动和变白完成
@@ -2256,7 +2256,7 @@ local function playLoader(onFinish)
             }):Play()
 
             TweenService:Create(UIIcon, TweenInfo.new(exitTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Position = UDim2.new(0.5, -150, 0, -100), -- 移到屏幕顶部外
+                Position = UDim2.new(0.5, -190, 0, -100), -- 移到屏幕顶部外
                 ImageTransparency = 1
             }):Play()
 

@@ -2152,6 +2152,126 @@ local function playLoader(onFinish)
                     lbl.BackgroundTransparency = 1
                     lbl.Text = char
                     lbl.Font = Enum.Font.GothamBold
+local function playLoader(onFinish)
+    task.spawn(function()
+        local ok, err = pcall(function()
+            local MAIN_TEXT = "GhostlyPilotUI"
+            local SUB_TEXT = "UI作者：茉莉璐"
+            local WELCOME_TEXT = "欢迎使用 GhostlyPilot"
+            
+            local HOLD_TIME = 1.5
+            local LETTER_FLY_TIME = 0.35
+            local LETTER_STAGGER = 0.04
+            
+            -- 图标 ID
+            local ICON_IMAGE = "rbxassetid://117319089551538"
+            
+            -- 渐变粉蓝色
+            local GRADIENT_COLOR = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 182, 193)),
+                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(135, 206, 235)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 182, 193))
+            })
+
+            -- 清除旧加载界面
+            local oldLoader = parentGui:FindFirstChild("GhostlyPilot_Loader")
+            if oldLoader then oldLoader:Destroy() end
+
+            local Loader = Instance.new("ScreenGui")
+            Loader.Name = "GhostlyPilot_Loader"
+            Loader.IgnoreGuiInset = true
+            Loader.DisplayOrder = 10000
+            Loader.ResetOnSpawn = false
+            Loader.Parent = parentGui
+
+            -- 1. 初始黑屏
+            local Bg = Instance.new("Frame")
+            Bg.Size = UDim2.new(1, 0, 1, 0)
+            Bg.BackgroundColor3 = Color3.fromRGB(10, 10, 10) 
+            Bg.BorderSizePixel = 0
+            Bg.Parent = Loader
+
+            local Center = Instance.new("Frame")
+            Center.Size = UDim2.new(0, 600, 0, 200)
+            Center.AnchorPoint = Vector2.new(0.5, 0.5)
+            Center.Position = UDim2.new(0.5, 0, 0.5, 0)
+            Center.BackgroundTransparency = 1
+            Center.ZIndex = 2
+            Center.Parent = Bg
+
+            -- 2. 飞入的 UI 头像
+            local UIIcon = Instance.new("ImageLabel")
+            UIIcon.Size = UDim2.new(0, 90, 0, 90)
+            UIIcon.Position = UDim2.new(1, 150, 1, 150) 
+            UIIcon.BackgroundTransparency = 1
+            UIIcon.Image = ICON_IMAGE
+            UIIcon.ZIndex = 6
+            UIIcon.Parent = Bg
+
+            -- 3. 头像下方的欢迎语
+            local WelcomeText = Instance.new("TextLabel")
+            WelcomeText.Size = UDim2.new(0, 200, 0, 20)
+            WelcomeText.Position = UDim2.new(0.5, -190, 0.5, 60) -- 初始位置在左侧图标下方
+            WelcomeText.BackgroundTransparency = 1
+            WelcomeText.Text = WELCOME_TEXT
+            WelcomeText.Font = Enum.Font.GothamBold
+            WelcomeText.TextSize = 16
+            WelcomeText.TextColor3 = Color3.fromRGB(255, 255, 255)
+            WelcomeText.TextTransparency = 1
+            WelcomeText.ZIndex = 6
+            WelcomeText.Parent = Bg
+            
+            -- 给欢迎语加渐变
+            local welcomeGrad = Instance.new("UIGradient")
+            welcomeGrad.Color = GRADIENT_COLOR
+            welcomeGrad.Parent = WelcomeText
+
+            local function SplitChars(text)
+                local chars = {}
+                local i = 1
+                while i <= #text do
+                    local b = text:byte(i)
+                    local len = 1
+                    if b >= 240 then len = 4
+                    elseif b >= 224 then len = 3
+                    elseif b >= 192 then len = 2 end
+                    table.insert(chars, text:sub(i, i + len - 1))
+                    i = i + len
+                end
+                return chars
+            end
+
+            local function CreateLettersRow(parent, text, fontSize, yPosition)
+                local row = Instance.new("Frame")
+                row.AnchorPoint = Vector2.new(0.5, 0)
+                row.Position = UDim2.new(0.5, 50, 0, yPosition) 
+                row.Size = UDim2.new(0, 0, 0, fontSize + 10)
+                row.BackgroundTransparency = 1
+                row.Parent = parent
+
+                local letters = {}
+                local totalW = 0
+                local gap = 2
+                local chars = SplitChars(text)
+
+                for i, char in ipairs(chars) do
+                    local charW
+                    if char == " " then
+                        charW = math.floor(fontSize * 0.35)
+                    else
+                        local tmp = Instance.new("TextLabel")
+                        tmp.Font = Enum.Font.GothamBold
+                        tmp.TextSize = fontSize
+                        tmp.Text = char
+                        tmp.Parent = parent
+                        charW = tmp.TextBounds.X
+                        tmp:Destroy()
+                    end
+
+                    local lbl = Instance.new("TextLabel")
+                    lbl.BackgroundTransparency = 1
+                    lbl.Text = char
+                    lbl.Font = Enum.Font.GothamBold
                     lbl.TextSize = fontSize
                     lbl.TextColor3 = Color3.fromRGB(255, 255, 255) 
                     lbl.TextXAlignment = Enum.TextXAlignment.Center
@@ -2194,38 +2314,41 @@ local function playLoader(onFinish)
                 end
             end
 
-            -- ================= 电影级开场动画 =================
-            
-            -- 1. 黑屏短暂停留
+            -- ================= 电影级开场 =================
             task.wait(0.1)
 
-            -- 2. 头像从右下角飞入屏幕正中心 (耗时 1.2 秒)
+            -- 1. 图标从右下角飞到中心
             TweenService:Create(UIIcon, TweenInfo.new(1.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
                 Position = UDim2.new(0.5, -45, 0.5, -45)
             }):Play()
             task.wait(1.2)
 
-            -- 3. 黑屏渐变成白色，同时头像平滑移到左侧
+            -- 2. 黑屏变白，图标移到左侧
             TweenService:Create(Bg, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {
-                BackgroundColor3 = Color3.fromRGB(255, 240, 245) -- 变成樱花白（带一点点极淡的粉色，更贴合你的UI）
+                BackgroundColor3 = Color3.fromRGB(255, 240, 245)
             }):Play()
             TweenService:Create(UIIcon, TweenInfo.new(0.6, Enum.EasingStyle.Quart), {
-                Position = UDim2.new(0.5, -220, 0.5, -45) -- 移到左边
+                Position = UDim2.new(0.5, -220, 0.5, -45)
             }):Play()
             task.wait(0.6)
 
-            -- 4. 头像就位后，粉蓝渐变字从右侧飞入
+            -- 3. 右侧渐变字飞入，同时左侧的欢迎语淡入
+            task.spawn(function()
+                TweenService:Create(WelcomeText, TweenInfo.new(0.8), {TextTransparency = 0}):Play()
+            end)
+            
             PlayLetterFlyIn(mainLetters)
             task.wait(0.15)
             PlayLetterFlyIn(subLetters)
 
-            -- 5. 停留展示
+            -- 4. 停留
             task.wait(HOLD_TIME)
 
-            -- 6. 消散淡出
+            -- 5. 淡出
             local fadeTime = 0.8
             TweenService:Create(Bg, TweenInfo.new(fadeTime), {BackgroundTransparency = 1}):Play()
             TweenService:Create(UIIcon, TweenInfo.new(fadeTime), {ImageTransparency = 1}):Play()
+            TweenService:Create(WelcomeText, TweenInfo.new(fadeTime), {TextTransparency = 1}):Play()
             for _, item in ipairs(mainLetters) do
                 TweenService:Create(item.label, TweenInfo.new(fadeTime), {TextTransparency = 1}):Play()
             end
@@ -2234,9 +2357,12 @@ local function playLoader(onFinish)
             end
 
             task.wait(fadeTime + 0.1)
+            
+            -- 强制销毁加载层
             Loader:Destroy()
         end)
         if not ok then warn("[加载动画] 出错：", err) end
+        
         if onFinish then onFinish() end
     end)
 end

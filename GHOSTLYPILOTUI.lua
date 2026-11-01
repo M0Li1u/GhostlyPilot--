@@ -2060,7 +2060,7 @@ local function playLoader(onFinish)
         local ok, err = pcall(function()
             local MAIN_TEXT = "GhostlyPilot"
             local SUB_TEXT = "by茉莉璐"
-            local WELCOME_TEXT = "欢迎使用GhostlyPilot" -- 加回欢迎语
+            local WELCOME_TEXT = "欢迎使用GhostlyPilot"
             
             local HOLD_TIME = 1.5
             local LETTER_FLY_TIME = 0.35
@@ -2090,26 +2090,30 @@ local function playLoader(onFinish)
             Bg.BorderSizePixel = 0
             Bg.Parent = Loader
 
+            -- 【修改点1】将中心容器稍微往右偏一点，让左边留给图标，整体视觉在屏幕中间
             local Center = Instance.new("Frame")
             Center.Size = UDim2.new(0, 600, 0, 200)
             Center.AnchorPoint = Vector2.new(0.5, 0.5)
-            Center.Position = UDim2.new(0.5, 0, 0.5, 0)
+            Center.Position = UDim2.new(0.5, 40, 0.45, 0) -- X轴向右偏移40，Y轴稍微靠上一点
             Center.BackgroundTransparency = 1
             Center.ZIndex = 2
             Center.Parent = Bg
 
+            -- 【修改点2】图标放在主文字正左边
             local UIIcon = Instance.new("ImageLabel")
             UIIcon.Size = UDim2.new(0, 90, 0, 90)
-            UIIcon.Position = UDim2.new(1, 150, 1, 150) 
+            UIIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+            UIIcon.Position = UDim2.new(0.5, -220, 0.45, 0) -- 整体屏幕中心向左 -220，与文字Y轴对齐
             UIIcon.BackgroundTransparency = 1
             UIIcon.Image = ICON_IMAGE
             UIIcon.ZIndex = 6
             UIIcon.Parent = Bg
             
-            -- 图标下面的欢迎语
+            -- 【修改点3】欢迎语放到很下面的位置，屏幕居中
             local WelcomeText = Instance.new("TextLabel")
-            WelcomeText.Size = UDim2.new(0, 200, 0, 20)
-            WelcomeText.Position = UDim2.new(0.5, -265, 0.5, 40) -- 定在中心偏左，头像正下方
+            WelcomeText.Size = UDim2.new(0, 300, 0, 20)
+            WelcomeText.AnchorPoint = Vector2.new(0.5, 0.5)
+            WelcomeText.Position = UDim2.new(0.5, 0, 0.85, 0) -- X轴居中，Y轴在屏幕 85% 的高度（很下面）
             WelcomeText.BackgroundTransparency = 1
             WelcomeText.Text = WELCOME_TEXT
             WelcomeText.Font = Enum.Font.GothamBold
@@ -2141,7 +2145,7 @@ local function playLoader(onFinish)
             local function CreateLettersRow(parent, text, fontSize, yPosition)
                 local row = Instance.new("Frame")
                 row.AnchorPoint = Vector2.new(0.5, 0)
-                row.Position = UDim2.new(0.5, 50, 0, yPosition) 
+                row.Position = UDim2.new(0.5, 0, 0, yPosition) -- 【修改点4】文字在Center容器内绝对居中
                 row.Size = UDim2.new(0, 0, 0, fontSize + 10)
                 row.BackgroundTransparency = 1
                 row.Parent = parent
@@ -2213,19 +2217,16 @@ local function playLoader(onFinish)
 
             task.wait(0.1)
 
+            -- 【修改点5】图标初始飞入动画，最终位置要与目标位置一致（0.5, -220, 0.45, 0）
             TweenService:Create(UIIcon, TweenInfo.new(1.2, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                Position = UDim2.new(0.5, -45, 0.5, -25) 
+                Position = UDim2.new(0.5, -220, 0.45, 0) 
             }):Play()
             task.wait(1.2)
 
             TweenService:Create(Bg, TweenInfo.new(0.6, Enum.EasingStyle.Quad), {
                 BackgroundColor3 = Color3.fromRGB(255, 240, 245)
             }):Play()
-            TweenService:Create(UIIcon, TweenInfo.new(0.6, Enum.EasingStyle.Quart), {
-                Position = UDim2.new(0.5, -220, 0.5, -25) 
-            }):Play()
-            task.wait(0.6)
-
+            
             -- 文字飞入的同时，图标下的欢迎语淡入
             task.spawn(function()
                 TweenService:Create(WelcomeText, TweenInfo.new(0.8), {TextTransparency = 0}):Play()

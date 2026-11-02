@@ -614,7 +614,7 @@ local SakuraFrame = Instance.new("Frame")
 SakuraFrame.Name = "SakuraWallpaper"
 SakuraFrame.Size = UDim2.new(1, 0, 1, 0)
 SakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 235, 245)
-SakuraFrame.BackgroundTransparency = 0.1 
+SakuraFrame.BackgroundTransparency = 0.1
 SakuraFrame.ZIndex = 0
 SakuraFrame.ClipsDescendants = true
 SakuraFrame.Parent = MainCard
@@ -626,7 +626,7 @@ bgPattern.Size = UDim2.new(1, 0, 1, 0)
 bgPattern.BackgroundTransparency = 1
 bgPattern.Image = "rbxassetid://1316045217"
 bgPattern.ScaleType = Enum.ScaleType.Crop
-bgPattern.ImageTransparency = 0.6 
+bgPattern.ImageTransparency = 0.6
 bgPattern.ZIndex = 0
 bgPattern.Parent = SakuraFrame
 Instance.new("UICorner", bgPattern).CornerRadius = UDim.new(0, 16)
@@ -634,56 +634,50 @@ Instance.new("UICorner", bgPattern).CornerRadius = UDim.new(0, 16)
 task.spawn(function()
     local petalImage = "rbxassetid://8131033444"
     while SakuraFrame and SakuraFrame.Parent do
-        local isDark = (Library.Theme.CardBg.R < 0.2)
-        if not isDark then
-            local petal = Instance.new("ImageLabel")
-            petal.BackgroundTransparency = 1
-            
-            local isSakura = (Library.Theme.Accent.R > 0.8 and Library.Theme.Accent.B > 0.8)
-            if isSakura then
-                petal.Image = petalImage
-                petal.ImageColor3 = Color3.fromRGB(255, 182, 193)
-                petal.ImageTransparency = math.random(40, 70) / 100 
-                local pSize = math.random(60, 110)
-                petal.Size = UDim2.fromOffset(pSize, pSize)
-            else
-                petal.Image = ""
-                local emoji = "🌸"
-                if Library.Theme.Accent.B > 0.8 then emoji = "❄️"
-                elseif Library.Theme.Accent.G > 0.8 then emoji = "🍀"
-                elseif Library.Theme.Accent.R > 0.8 and Library.Theme.Accent.G < 0.5 then emoji = "🍁" end
-                petal.Text = emoji
-                petal.Font = Enum.Font.GothamBold
-                petal.TextSize = math.random(20, 35)
-                petal.TextColor3 = Library.Theme.Accent
-                petal.TextTransparency = math.random(20, 50) / 100
-                petal.Size = UDim2.fromOffset(40, 40)
-            end
-            
-            local startX = math.random(-50, 650)
-            petal.Position = UDim2.new(0, startX, 0, -100)
-            petal.ZIndex = 1 
-            petal.Parent = SakuraFrame
-
-            local fallTime = math.random(10, 25) / 10
-            local endX = startX + math.random(-100, 100)
-            local startRot = math.random(0, 360)
-            petal.Rotation = startRot
-
-            local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
-                Position = UDim2.new(0, endX, 1, 100),
-                Rotation = startRot + math.random(180, 360)
-            })
-            tween:Play()
-
-            tween.Completed:Connect(function()
-                petal:Destroy()
-            end)
-
-            task.wait(math.random(2, 5) / 100)
+        local petal = Instance.new("ImageLabel")
+        petal.BackgroundTransparency = 1
+        
+        local isSakura = (Library.Theme.Accent.R > 0.8 and Library.Theme.Accent.B > 0.8)
+        if isSakura then
+            petal.Image = petalImage
+            petal.ImageColor3 = Color3.fromRGB(255, 182, 193)
+            petal.ImageTransparency = math.random(40, 70) / 100 
+            petal.Size = UDim2.fromOffset(math.random(60, 110), math.random(60, 110))
         else
-            task.wait(0.5)
+            petal.Image = ""
+            local emoji = "🌸"
+            if Library.Theme.Accent.B > 0.8 then emoji = "❄️"
+            elseif Library.Theme.Accent.G > 0.8 then emoji = "🍀"
+            elseif Library.Theme.Accent.R > 0.8 and Library.Theme.Accent.G < 0.5 then emoji = "🍁" end
+            petal.Text = emoji
+            petal.Font = Enum.Font.GothamBold
+            petal.TextSize = math.random(20, 35)
+            petal.TextColor3 = Library.Theme.Accent
+            petal.TextTransparency = math.random(20, 50) / 100
+            petal.Size = UDim2.fromOffset(40, 40)
         end
+        
+        local startX = math.random(-50, 650)
+        petal.Position = UDim2.new(0, startX, 0, -100)
+        petal.ZIndex = 1
+        petal.Parent = SakuraFrame
+
+        local fallTime = math.random(10, 25) / 10
+        local endX = startX + math.random(-100, 100)
+        local startRot = math.random(0, 360)
+        petal.Rotation = startRot
+
+        local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
+            Position = UDim2.new(0, endX, 1, 100),
+            Rotation = startRot + math.random(180, 360)
+        })
+        tween:Play()
+
+        tween.Completed:Connect(function()
+            petal:Destroy()
+        end)
+
+        task.wait(math.random(2, 5) / 100)
     end
 end)
 
@@ -758,7 +752,7 @@ end)
     LeftPanel.Size = UDim2.new(0, 180, 1, -20)
     LeftPanel.Position = UDim2.new(0, 10, 0, 10)
     LeftPanel.BackgroundColor3 = Library.Theme.PanelBg
-    LeftPanel.BackgroundTransparency = 0.3
+    LeftPanel.BackgroundTransparency = 0.4
     LeftPanel.BorderSizePixel = 0
     LeftPanel.ClipsDescendants = true
     LeftPanel.Parent = MainCard
@@ -880,7 +874,7 @@ end)
     RightPanel.Size = UDim2.new(1, -204, 1, -60)
     RightPanel.Position = UDim2.new(0, 194, 0, 50)
     RightPanel.BackgroundColor3 = Library.Theme.CardBg
-    RightPanel.BackgroundTransparency = 0.1
+    RightPanel.BackgroundTransparency = 0.4
     RightPanel.BorderSizePixel = 0
     RightPanel.ScrollBarThickness = 4
     RightPanel.ScrollBarImageColor3 = Library.Theme.Stroke

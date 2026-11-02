@@ -610,39 +610,31 @@ local function buildBaseUI()
     MainGradient.Parent = MainCard
     Library.Globals.MainGradient = MainGradient
     
--- ============================================================
--- 🌸 婉月 UI 终极视觉复刻版 (高透底 + 暗纹背景 + 大花瓣)
--- ============================================================
 local SakuraFrame = Instance.new("Frame")
 SakuraFrame.Name = "SakuraWallpaper"
 SakuraFrame.Size = UDim2.new(1, 0, 1, 0)
--- 把底色调成半透明白，让后面的 3D 场景透出来
-SakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-SakuraFrame.BackgroundTransparency = 0.35 
+SakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 235, 245)
+SakuraFrame.BackgroundTransparency = 0.2
 SakuraFrame.ZIndex = 1
 SakuraFrame.ClipsDescendants = true
 SakuraFrame.Parent = MainCard
 Instance.new("UICorner", SakuraFrame).CornerRadius = UDim.new(0, 16)
 Library.Globals.SakuraFrame = SakuraFrame
 
--- 第一层：铺满整个背景的樱花暗纹贴图 (复刻图里的底纹)
 local bgPattern = Instance.new("ImageLabel")
 bgPattern.Size = UDim2.new(1, 0, 1, 0)
 bgPattern.BackgroundTransparency = 1
--- 用的是一张超大的樱花纹理图，平铺模式
 bgPattern.Image = "rbxassetid://1316045217"
 bgPattern.ScaleType = Enum.ScaleType.Crop
-bgPattern.ImageTransparency = 0.75 -- 透明度极高，只做暗纹
+bgPattern.ImageTransparency = 0.75
 bgPattern.ZIndex = 1
 bgPattern.Parent = SakuraFrame
 Instance.new("UICorner", bgPattern).CornerRadius = UDim.new(0, 16)
 
--- 第二层：动态飘落的大花瓣贴图 (复刻图里飘落的花瓣)
 task.spawn(function()
-    local petalImage = "rbxassetid://8131033444" -- 高质量樱花花瓣
+    local petalImage = "rbxassetid://8131033444"
     
     while SakuraFrame and SakuraFrame.Parent do
-        -- 只有樱花粉主题才下“暴雨”，其他主题保持安静
         local isSakura = (Library.Theme.Accent.R > 0.8 and Library.Theme.Accent.B > 0.8)
         
         local petal = Instance.new("ImageLabel")
@@ -650,20 +642,18 @@ task.spawn(function()
         petal.Image = petalImage
         
         if isSakura then
-            -- 樱花粉专属：大花瓣、半透明、极速
             petal.ImageColor3 = Color3.fromRGB(255, 182, 193)
             petal.ImageTransparency = math.random(40, 70) / 100 
             
-            -- 👇 花瓣大小：60 到 110 像素，非常大
             local pSize = math.random(60, 110)
             petal.Size = UDim2.fromOffset(pSize, pSize)
             
             local startX = math.random(-50, 650)
             petal.Position = UDim2.new(0, startX, 0, -100)
-            petal.ZIndex = 2 -- 压在上面
+            petal.ZIndex = 2
             petal.Parent = SakuraFrame
 
-            local fallTime = math.random(15, 30) / 10 -- 1.5 到 3 秒落到底
+            local fallTime = math.random(15, 30) / 10
             local endX = startX + math.random(-100, 100)
             local startRot = math.random(0, 360)
             petal.Rotation = startRot
@@ -678,10 +668,8 @@ task.spawn(function()
                 petal:Destroy()
             end)
 
-            -- 密度：每 0.01 ~ 0.05 秒出一个，满屏乱飞
             task.wait(math.random(1, 5) / 100)
         else
-            -- 其他主题换成 Emoji
             petal.Image = ""
             local themeAccent = Library.Theme.Accent
             if themeAccent.B > 0.8 then petal.Text = "💧"
@@ -2100,7 +2088,7 @@ local function playLoader(onFinish)
             -- 文字容器（包含主标题和副标题）
             local TextFrame = Instance.new("Frame")
             TextFrame.Size = UDim2.new(0, 400, 0, 200)
-            TextFrame.Position = UDim2.new(0.5, 10, 0.5, -80) -- 位于图标右侧
+            TextFrame.Position = UDim2.new(0.5, 50, 0.5, -80) -- 位于图标右侧
             TextFrame.BackgroundTransparency = 1
             TextFrame.ZIndex = 5
             TextFrame.Parent = Bg
@@ -2225,7 +2213,7 @@ local function playLoader(onFinish)
             end)
 
             TweenService:Create(UIIcon, TweenInfo.new(2.0, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
-                Position = UDim2.new(0.5, -190, 0.5, -50) -- 移到偏左的位置
+                Position = UDim2.new(0.5, -150, 0.5, -50) -- 移到偏左的位置
             }):Play()
             
             task.wait(2.0) -- 等待移动和变白完成
@@ -2256,7 +2244,7 @@ local function playLoader(onFinish)
             }):Play()
 
             TweenService:Create(UIIcon, TweenInfo.new(exitTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-                Position = UDim2.new(0.5, -190, 0, -100), -- 移到屏幕顶部外
+                Position = UDim2.new(0.5, -150, 0, -100), -- 移到屏幕顶部外
                 ImageTransparency = 1
             }):Play()
 
@@ -2374,6 +2362,8 @@ function Library:Init()
             self.Theme[k] = v
         end
         self.COLOR_ON = self.Theme.Accent
+    else
+        self:ApplyTheme("樱花粉")
     end
 
     initSounds()

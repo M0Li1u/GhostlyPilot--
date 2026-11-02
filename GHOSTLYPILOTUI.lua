@@ -614,8 +614,8 @@ local SakuraFrame = Instance.new("Frame")
 SakuraFrame.Name = "SakuraWallpaper"
 SakuraFrame.Size = UDim2.new(1, 0, 1, 0)
 SakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 235, 245)
-SakuraFrame.BackgroundTransparency = 0.2
-SakuraFrame.ZIndex = 1
+SakuraFrame.BackgroundTransparency = 0.1 
+SakuraFrame.ZIndex = 0
 SakuraFrame.ClipsDescendants = true
 SakuraFrame.Parent = MainCard
 Instance.new("UICorner", SakuraFrame).CornerRadius = UDim.new(0, 16)
@@ -626,89 +626,61 @@ bgPattern.Size = UDim2.new(1, 0, 1, 0)
 bgPattern.BackgroundTransparency = 1
 bgPattern.Image = "rbxassetid://1316045217"
 bgPattern.ScaleType = Enum.ScaleType.Crop
-bgPattern.ImageTransparency = 0.75
-bgPattern.ZIndex = 1
+bgPattern.ImageTransparency = 0.6 
+bgPattern.ZIndex = 0
 bgPattern.Parent = SakuraFrame
 Instance.new("UICorner", bgPattern).CornerRadius = UDim.new(0, 16)
 
 task.spawn(function()
     local petalImage = "rbxassetid://8131033444"
-    
     while SakuraFrame and SakuraFrame.Parent do
-        local theme = Library.Theme
-        local isSakura = (theme.Accent.R > 0.8 and theme.Accent.B > 0.8)
-        local isDark = (theme.CardBg.R < 0.2)
-        
+        local isDark = (Library.Theme.CardBg.R < 0.2)
         if not isDark then
             local petal = Instance.new("ImageLabel")
             petal.BackgroundTransparency = 1
             
+            local isSakura = (Library.Theme.Accent.R > 0.8 and Library.Theme.Accent.B > 0.8)
             if isSakura then
                 petal.Image = petalImage
                 petal.ImageColor3 = Color3.fromRGB(255, 182, 193)
                 petal.ImageTransparency = math.random(40, 70) / 100 
-                
                 local pSize = math.random(60, 110)
                 petal.Size = UDim2.fromOffset(pSize, pSize)
-                
-                local startX = math.random(-50, 650)
-                petal.Position = UDim2.new(0, startX, 0, -100)
-                petal.ZIndex = 2
-                petal.Parent = SakuraFrame
-
-                local fallTime = math.random(15, 30) / 10
-                local endX = startX + math.random(-100, 100)
-                local startRot = math.random(0, 360)
-                petal.Rotation = startRot
-
-                local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
-                    Position = UDim2.new(0, endX, 1, 100),
-                    Rotation = startRot + math.random(180, 360)
-                })
-                tween:Play()
-
-                tween.Completed:Connect(function()
-                    petal:Destroy()
-                end)
-
-                task.wait(math.random(1, 5) / 100)
             else
                 petal.Image = ""
                 local emoji = "🌸"
-                
-                if theme.Accent.B > 0.8 then 
-                    emoji = "❄️"
-                elseif theme.Accent.G > 0.8 then 
-                    emoji = "🍀"
-                elseif theme.Accent.R > 0.8 and theme.Accent.G < 0.5 then 
-                    emoji = "🍁"
-                end
-                
+                if Library.Theme.Accent.B > 0.8 then emoji = "❄️"
+                elseif Library.Theme.Accent.G > 0.8 then emoji = "🍀"
+                elseif Library.Theme.Accent.R > 0.8 and Library.Theme.Accent.G < 0.5 then emoji = "🍁" end
                 petal.Text = emoji
                 petal.Font = Enum.Font.GothamBold
                 petal.TextSize = math.random(20, 35)
-                petal.TextColor3 = theme.Accent
+                petal.TextColor3 = Library.Theme.Accent
                 petal.TextTransparency = math.random(20, 50) / 100
                 petal.Size = UDim2.fromOffset(40, 40)
-                
-                local startX = math.random(-50, 650)
-                petal.Position = UDim2.new(0, startX, 0, -50)
-                petal.ZIndex = 2
-                petal.Parent = SakuraFrame
-                
-                local fallTime = math.random(4, 8)
-                local endX = startX + math.random(-100, 100)
-                local startRot = math.random(0, 360)
-                petal.Rotation = startRot
-                
-                local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
-                    Position = UDim2.new(0, endX, 1, 100),
-                    Rotation = startRot + math.random(180, 360)
-                })
-                tween:Play()
-                tween.Completed:Connect(function() petal:Destroy() end)
-                task.wait(math.random(3, 8) / 10)
             end
+            
+            local startX = math.random(-50, 650)
+            petal.Position = UDim2.new(0, startX, 0, -100)
+            petal.ZIndex = 1 
+            petal.Parent = SakuraFrame
+
+            local fallTime = math.random(10, 25) / 10
+            local endX = startX + math.random(-100, 100)
+            local startRot = math.random(0, 360)
+            petal.Rotation = startRot
+
+            local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
+                Position = UDim2.new(0, endX, 1, 100),
+                Rotation = startRot + math.random(180, 360)
+            })
+            tween:Play()
+
+            tween.Completed:Connect(function()
+                petal:Destroy()
+            end)
+
+            task.wait(math.random(2, 5) / 100)
         else
             task.wait(0.5)
         end

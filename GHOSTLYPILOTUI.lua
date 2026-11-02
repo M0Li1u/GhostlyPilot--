@@ -610,90 +610,111 @@ local function buildBaseUI()
     MainGradient.Parent = MainCard
     Library.Globals.MainGradient = MainGradient
     
--- ============================================================
--- 🌸 纯代码高仿“婉月 UI” (无外部贴图，纯樱花粉)
--- ============================================================
 local SakuraFrame = Instance.new("Frame")
 SakuraFrame.Name = "SakuraWallpaper"
 SakuraFrame.Size = UDim2.new(1, 0, 1, 0)
 SakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 235, 245)
-SakuraFrame.BackgroundTransparency = 0.25
+SakuraFrame.BackgroundTransparency = 0.2
 SakuraFrame.ZIndex = 1
 SakuraFrame.ClipsDescendants = true
 SakuraFrame.Parent = MainCard
 Instance.new("UICorner", SakuraFrame).CornerRadius = UDim.new(0, 16)
 Library.Globals.SakuraFrame = SakuraFrame
 
-local patternHolder = Instance.new("Frame")
-patternHolder.Size = UDim2.new(1, 0, 1, 0)
-patternHolder.BackgroundTransparency = 1
-patternHolder.ZIndex = 1
-patternHolder.Parent = SakuraFrame
-
-for i = 1, 6 do
-    local petalBg = Instance.new("Frame")
-    petalBg.Size = UDim2.new(0, math.random(150, 250), 0, math.random(150, 250))
-    petalBg.Position = UDim2.new(math.random(-10, 90)/100, 0, math.random(-10, 90)/100, 0)
-    petalBg.BackgroundColor3 = Color3.fromRGB(255, 192, 203)
-    petalBg.BackgroundTransparency = 0.85 
-    petalBg.Rotation = math.random(0, 360)
-    petalBg.ZIndex = 1
-    petalBg.Parent = patternHolder
-    Instance.new("UICorner", petalBg).CornerRadius = UDim.new(1, 0)
-end
+local bgPattern = Instance.new("ImageLabel")
+bgPattern.Size = UDim2.new(1, 0, 1, 0)
+bgPattern.BackgroundTransparency = 1
+bgPattern.Image = "rbxassetid://1316045217"
+bgPattern.ScaleType = Enum.ScaleType.Crop
+bgPattern.ImageTransparency = 0.75
+bgPattern.ZIndex = 1
+bgPattern.Parent = SakuraFrame
+Instance.new("UICorner", bgPattern).CornerRadius = UDim.new(0, 16)
 
 task.spawn(function()
+    local petalImage = "rbxassetid://8131033444"
+    
     while SakuraFrame and SakuraFrame.Parent do
-        local isSakura = (Library.Theme.Accent.R > 0.8 and Library.Theme.Accent.B > 0.8)
+        local theme = Library.Theme
+        local isSakura = (theme.Accent.R > 0.8 and theme.Accent.B > 0.8)
+        local isDark = (theme.CardBg.R < 0.2)
         
-        local petal = Instance.new("TextLabel")
-        petal.BackgroundTransparency = 1
-        
-        if isSakura then
-            petal.Text = "🌸"
-            petal.Font = Enum.Font.GothamBold
-            petal.TextColor3 = Color3.fromRGB(255, 150, 180)
-            petal.TextTransparency = math.random(20, 50) / 100 
-            petal.TextSize = math.random(40, 80)
-            petal.Size = UDim2.fromOffset(100, 100)
+        if not isDark then
+            local petal = Instance.new("ImageLabel")
+            petal.BackgroundTransparency = 1
+            
+            if isSakura then
+                petal.Image = petalImage
+                petal.ImageColor3 = Color3.fromRGB(255, 182, 193)
+                petal.ImageTransparency = math.random(40, 70) / 100 
+                
+                local pSize = math.random(60, 110)
+                petal.Size = UDim2.fromOffset(pSize, pSize)
+                
+                local startX = math.random(-50, 650)
+                petal.Position = UDim2.new(0, startX, 0, -100)
+                petal.ZIndex = 2
+                petal.Parent = SakuraFrame
+
+                local fallTime = math.random(15, 30) / 10
+                local endX = startX + math.random(-100, 100)
+                local startRot = math.random(0, 360)
+                petal.Rotation = startRot
+
+                local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
+                    Position = UDim2.new(0, endX, 1, 100),
+                    Rotation = startRot + math.random(180, 360)
+                })
+                tween:Play()
+
+                tween.Completed:Connect(function()
+                    petal:Destroy()
+                end)
+
+                task.wait(math.random(1, 5) / 100)
+            else
+                petal.Image = ""
+                local emoji = "🌸"
+                
+                if theme.Accent.B > 0.8 then 
+                    emoji = "❄️"
+                elseif theme.Accent.G > 0.8 then 
+                    emoji = "🍀"
+                elseif theme.Accent.R > 0.8 and theme.Accent.G < 0.5 then 
+                    emoji = "🍁"
+                end
+                
+                petal.Text = emoji
+                petal.Font = Enum.Font.GothamBold
+                petal.TextSize = math.random(20, 35)
+                petal.TextColor3 = theme.Accent
+                petal.TextTransparency = math.random(20, 50) / 100
+                petal.Size = UDim2.fromOffset(40, 40)
+                
+                local startX = math.random(-50, 650)
+                petal.Position = UDim2.new(0, startX, 0, -50)
+                petal.ZIndex = 2
+                petal.Parent = SakuraFrame
+                
+                local fallTime = math.random(4, 8)
+                local endX = startX + math.random(-100, 100)
+                local startRot = math.random(0, 360)
+                petal.Rotation = startRot
+                
+                local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
+                    Position = UDim2.new(0, endX, 1, 100),
+                    Rotation = startRot + math.random(180, 360)
+                })
+                tween:Play()
+                tween.Completed:Connect(function() petal:Destroy() end)
+                task.wait(math.random(3, 8) / 10)
+            end
         else
-            local currentEmojis, tintColor = GetThemeEmojis()
-            petal.Text = currentEmojis[1]
-            petal.Font = Enum.Font.GothamBold
-            petal.TextSize = math.random(14, 26)
-            petal.TextTransparency = math.random(10, 50) / 100
-            petal.TextColor3 = tintColor
-            petal.Size = UDim2.fromOffset(30, 30)
-        end
-        
-        local startX = math.random(-50, 650)
-        petal.Position = UDim2.new(0, startX, 0, -100)
-        petal.ZIndex = 2
-        petal.Parent = SakuraFrame
-
-        local fallTime = isSakura and (math.random(10, 25) / 10) or math.random(4, 8)
-        local endX = startX + math.random(-100, 100)
-        local startRot = math.random(0, 360)
-        petal.Rotation = startRot
-
-        local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
-            Position = UDim2.new(0, endX, 1, 100),
-            Rotation = startRot + math.random(180, 360)
-        })
-        tween:Play()
-
-        tween.Completed:Connect(function()
-            petal:Destroy()
-        end)
-
-        if isSakura then
-            task.wait(math.random(2, 5) / 100)
-        else
-            task.wait(math.random(3, 8) / 10)
+            task.wait(0.5)
         end
     end
 end)
-    
+
     -- 通知容器
     local NotifHolder = Instance.new("Frame")
     NotifHolder.Name = "NotifHolder"
@@ -884,8 +905,8 @@ end)
     -- 右侧内容区
     local RightPanel = Instance.new("ScrollingFrame")
     RightPanel.Name = "RightPanel"
-    RightPanel.Size = UDim2.new(1, -200, 1, -55)
-    RightPanel.Position = UDim2.new(0, 194, 0, 48)
+    RightPanel.Size = UDim2.new(1, -204, 1, -60)
+    RightPanel.Position = UDim2.new(0, 194, 0, 50)
     RightPanel.BackgroundColor3 = Library.Theme.CardBg
     RightPanel.BackgroundTransparency = 0.1
     RightPanel.BorderSizePixel = 0
@@ -2042,11 +2063,17 @@ local function playLoader(onFinish)
     task.spawn(function()
         local ok, err = pcall(function()
             local MAIN_TEXT = "GhostlyPilot"
-            local SUB_TEXT = "茉莉璐：妈妈。"
-            local HOLD_TIME = 1.5
-            local LETTER_FLY_TIME = 0.25
-            local LETTER_STAGGER = 0.05
-            local TEXT_COLOR = Color3.fromRGB(40, 40, 40)
+            local SUB_TEXT = "by茉莉璐"
+            local WELCOME_TEXT = "欢迎使用GhostlyPilot"
+            local ICON_IMAGE = "rbxassetid://117319089551538"
+            local GRADIENT_COLOR = ColorSequence.new({
+                ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 182, 193)),
+                ColorSequenceKeypoint.new(0.5, Color3.fromRGB(135, 206, 235)),
+                ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 182, 193))
+            })
+
+            local oldLoader = parentGui:FindFirstChild("GhostlyPilot_Loader")
+            if oldLoader then oldLoader:Destroy() end
 
             local Loader = Instance.new("ScreenGui")
             Loader.Name = "GhostlyPilot_Loader"
@@ -2057,17 +2084,42 @@ local function playLoader(onFinish)
 
             local Bg = Instance.new("Frame")
             Bg.Size = UDim2.new(1, 0, 1, 0)
-            Bg.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+            Bg.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
             Bg.BorderSizePixel = 0
             Bg.Parent = Loader
 
-            local Center = Instance.new("Frame")
-            Center.Size = UDim2.new(0, 600, 0, 200)
-            Center.AnchorPoint = Vector2.new(0.5, 0.5)
-            Center.Position = UDim2.new(0.5, 0, 0.5, 0)
-            Center.BackgroundTransparency = 1
-            Center.ZIndex = 2
-            Center.Parent = Bg
+            local UIIcon = Instance.new("ImageLabel")
+            UIIcon.Size = UDim2.new(0, 100, 0, 100)
+            UIIcon.AnchorPoint = Vector2.new(0.5, 0.5)
+            UIIcon.Position = UDim2.new(1.2, 0, 1.2, 0)
+            UIIcon.BackgroundTransparency = 1
+            UIIcon.Image = ICON_IMAGE
+            UIIcon.ZIndex = 6
+            UIIcon.Parent = Bg
+
+            local TextFrame = Instance.new("Frame")
+            TextFrame.Size = UDim2.new(0, 400, 0, 200)
+            TextFrame.Position = UDim2.new(0.5, 10, 0.5, -80)
+            TextFrame.BackgroundTransparency = 1
+            TextFrame.ZIndex = 5
+            TextFrame.Parent = Bg
+
+            local WelcomeText = Instance.new("TextLabel")
+            WelcomeText.Size = UDim2.new(0, 400, 0, 30)
+            WelcomeText.AnchorPoint = Vector2.new(0.5, 0.5)
+            WelcomeText.Position = UDim2.new(0.5, 0, 0.8, 0)
+            WelcomeText.BackgroundTransparency = 1
+            WelcomeText.Text = WELCOME_TEXT
+            WelcomeText.Font = Enum.Font.GothamBold
+            WelcomeText.TextSize = 18
+            WelcomeText.TextColor3 = Color3.fromRGB(255, 255, 255)
+            WelcomeText.TextTransparency = 1
+            WelcomeText.ZIndex = 6
+            WelcomeText.Parent = Bg
+            
+            local welcomeGrad = Instance.new("UIGradient")
+            welcomeGrad.Color = GRADIENT_COLOR
+            welcomeGrad.Parent = WelcomeText
 
             local function SplitChars(text)
                 local chars = {}
@@ -2116,11 +2168,16 @@ local function playLoader(onFinish)
                     lbl.Text = char
                     lbl.Font = Enum.Font.GothamBold
                     lbl.TextSize = fontSize
-                    lbl.TextColor3 = TEXT_COLOR
+                    lbl.TextColor3 = Color3.fromRGB(255, 255, 255) 
                     lbl.TextXAlignment = Enum.TextXAlignment.Center
                     lbl.Size = UDim2.new(0, charW + 4, 1, 0)
                     lbl.Position = UDim2.new(0, 0, 0, 0)
                     lbl.Parent = row
+                    
+                    local grad = Instance.new("UIGradient")
+                    grad.Color = GRADIENT_COLOR
+                    grad.Parent = lbl
+                    
                     table.insert(letters, {label = lbl, width = charW + 4})
                     totalW = totalW + charW + 4 + gap
                 end
@@ -2135,8 +2192,8 @@ local function playLoader(onFinish)
                 return row, letters
             end
 
-            local mainRow, mainLetters = CreateLettersRow(Center, MAIN_TEXT, 42, 40)
-            local subRow, subLetters = CreateLettersRow(Center, SUB_TEXT, 20, 110)
+            local mainRow, mainLetters = CreateLettersRow(TextFrame, MAIN_TEXT, 42, 20)
+            local subRow, subLetters = CreateLettersRow(TextFrame, SUB_TEXT, 20, 80)
 
             local function PlayLetterFlyIn(letters)
                 for i, item in ipairs(letters) do
@@ -2144,29 +2201,65 @@ local function playLoader(onFinish)
                     for j = 1, i - 1 do
                         targetX = targetX + letters[j].width + 2
                     end
-                    TweenService:Create(item.label, TweenInfo.new(LETTER_FLY_TIME, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
+                    TweenService:Create(item.label, TweenInfo.new(0.35, Enum.EasingStyle.Back, Enum.EasingDirection.Out), {
                         Position = UDim2.new(0, targetX, 0, 0),
                         TextTransparency = 0,
                     }):Play()
-                    task.wait(LETTER_STAGGER)
+                    task.wait(0.04)
                 end
             end
 
-            PlayLetterFlyIn(mainLetters)
-            task.wait(0.15)
-            PlayLetterFlyIn(subLetters)
-            task.wait(HOLD_TIME)
+            task.spawn(function()
+                TweenService:Create(Bg, TweenInfo.new(2.0, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    BackgroundColor3 = Color3.fromRGB(255, 240, 245)
+                }):Play()
+            end)
 
-            local fadeTime = 0.8
-            TweenService:Create(Bg, TweenInfo.new(fadeTime), {BackgroundTransparency = 1}):Play()
+            TweenService:Create(UIIcon, TweenInfo.new(2.0, Enum.EasingStyle.Quart, Enum.EasingDirection.Out), {
+                Position = UDim2.new(0.5, -190, 0.5, -50)
+            }):Play()
+            task.wait(2.0)
+
+            task.spawn(function()
+                PlayLetterFlyIn(mainLetters)
+            end)
+            task.wait(0.2)
+            task.spawn(function()
+                PlayLetterFlyIn(subLetters)
+            end)
+
+            task.wait(0.5)
+            TweenService:Create(WelcomeText, TweenInfo.new(1.0, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                TextTransparency = 0
+            }):Play()
+
+            task.wait(2.5)
+
+            local exitTime = 1.0
+            TweenService:Create(Bg, TweenInfo.new(exitTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { BackgroundTransparency = 1 }):Play()
+            TweenService:Create(UIIcon, TweenInfo.new(exitTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Position = UDim2.new(0.5, -190, 0, -100),
+                ImageTransparency = 1
+            }):Play()
+            TweenService:Create(WelcomeText, TweenInfo.new(exitTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                Position = UDim2.new(0.5, 0, 0, -100),
+                TextTransparency = 1
+            }):Play()
+
             for _, item in ipairs(mainLetters) do
-                TweenService:Create(item.label, TweenInfo.new(fadeTime), {TextTransparency = 1}):Play()
+                TweenService:Create(item.label, TweenInfo.new(exitTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Position = UDim2.new(item.label.Position.X.Scale, item.label.Position.X.Offset, 0, -100),
+                    TextTransparency = 1
+                }):Play()
             end
             for _, item in ipairs(subLetters) do
-                TweenService:Create(item.label, TweenInfo.new(fadeTime), {TextTransparency = 1}):Play()
+                TweenService:Create(item.label, TweenInfo.new(exitTime, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+                    Position = UDim2.new(item.label.Position.X.Scale, item.label.Position.X.Offset, 0, -100),
+                    TextTransparency = 1
+                }):Play()
             end
 
-            task.wait(fadeTime + 0.1)
+            task.wait(exitTime + 0.1)
             Loader:Destroy()
         end)
         if not ok then warn("[加载动画] 出错：", err) end

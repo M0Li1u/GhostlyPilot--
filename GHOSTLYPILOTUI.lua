@@ -1,7 +1,7 @@
 -- ============================================================
 -- GhostlyPilotUI - YC API Wrapper
 -- Author: 茉莉璐 With Deepseek
--- Version: 2.2.3(累死我了你们知道吗)
+-- Version: 2.2.5
 -- ============================================================
 
 if _G.GhostlyPilotUI_Loaded then
@@ -13,7 +13,7 @@ if _G.GhostlyPilotUI_Loaded then
 end
 
 local Library = {}
-local VERSION = "2.2.3"
+local VERSION = "2.2.5"
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -278,6 +278,7 @@ end
 -- Globals
 -- ============================================================
 Library.Globals = {
+    HUDAlign     = "Right",
     GuiRoot      = nil, MainCard     = nil, LeftPanel    = nil, RightPanel   = nil,
     HUDFrame     = nil, NotifHolder  = nil, DragHolder   = nil, Bar          = nil,
     TitleLabel   = nil, IconClickButton = nil, CloseButton  = nil,
@@ -285,6 +286,7 @@ Library.Globals = {
     ActiveNotifs = {}, FloatWidgets = {}, OpenSound    = nil, CloseSound   = nil,
     MainCardOpen = false, Initialized  = false,
     LeftScroll   = nil, LHTimeLabel = nil, MainGradient = nil,
+    GuiRoot      = nil, MainCard     = nil, LeftPanel    = nil, RightPanel   = nil,
 }
 
 local function initSounds()
@@ -724,23 +726,36 @@ end)
 
     -- HUD
     local HUDFrame = Instance.new("Frame")
-    HUDFrame.Name = "HUD"
-    HUDFrame.Parent = GuiRoot
-    HUDFrame.Position = UDim2.new(1, -10, 0, 50)
-    HUDFrame.AnchorPoint = Vector2.new(1, 0)
-    HUDFrame.Size = UDim2.new(0, 300, 1, -60)
-    HUDFrame.BackgroundTransparency = 1
-    HUDFrame.ZIndex = 1000
-    Library.Globals.HUDFrame = HUDFrame
-    local HUDUIScale = Instance.new("UIScale")
-    HUDUIScale.Parent = HUDFrame
-    HUDUIScale.Scale = scale
-    Library.Globals.HUDUIScale = HUDUIScale
-    local HUDLayout = Instance.new("UIListLayout")
-    HUDLayout.Parent = HUDFrame
-    HUDLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
-    HUDLayout.Padding = UDim.new(0, 2)
-    HUDLayout.SortOrder = Enum.SortOrder.LayoutOrder
+HUDFrame.Name = "HUD"
+HUDFrame.Parent = GuiRoot
+HUDFrame.Size = UDim2.new(0, 300, 1, -60)
+HUDFrame.BackgroundTransparency = 1
+HUDFrame.ZIndex = 10000
+Library.Globals.HUDFrame = HUDFrame
+
+local HUDUIScale = Instance.new("UIScale")
+HUDUIScale.Parent = HUDFrame
+HUDUIScale.Scale = scale
+Library.Globals.HUDUIScale = HUDUIScale
+
+local HUDLayout = Instance.new("UIListLayout")
+HUDLayout.Parent = HUDFrame
+HUDLayout.Padding = UDim.new(0, 2)
+HUDLayout.SortOrder = Enum.SortOrder.LayoutOrder
+
+local function updateHUDLayout()
+    if Library.Globals.HUDAlign == "Left" then
+        HUDFrame.Position = UDim2.new(0, 10, 0, 50)
+        HUDFrame.AnchorPoint = Vector2.new(0, 0)
+        HUDLayout.HorizontalAlignment = Enum.HorizontalAlignment.Left
+    elseif Library.Globals.HUDAlign == "Right" then
+        HUDFrame.Position = UDim2.new(1, -10, 0, 50)
+        HUDFrame.AnchorPoint = Vector2.new(1, 0)
+        HUDLayout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+    end
+end
+Library.updateHUDLayout = updateHUDLayout
+updateHUDLayout()
 
     -- 顶部标题栏
     local Header = Instance.new("Frame")
@@ -2310,6 +2325,25 @@ function Library:_BuildBuiltinWindows()
         self:ApplyTheme(selected)
         self:Notify("主题已切换：" .. selected, true)
     end, false, nil)
+
+local hudMod = SettingsWin:CreateModule("HUD 设置", function() end)
+hudMod:CreateDropdown("显示位置", {"居左", "居右", "隐藏"}, function(selected)
+    if selected == "居左" then
+        Library.Globals.HUDAlign = "Left"
+        if Library.updateHUDLayout then Library.updateHUDLayout() end
+        if Library.Globals.HUDFrame then Library.Globals.HUDFrame.Enabled = true end
+        Library:Notify("HUD 已靠左", true)
+    elseif selected == "居右" then
+        Library.Globals.HUDAlign = "Right"
+        if Library.updateHUDLayout then Library.updateHUDLayout() end
+        if Library.Globals.HUDFrame then Library.Globals.HUDFrame.Enabled = true end
+        Library:Notify("HUD 已靠右", true)
+    elseif selected == "隐藏" then
+        Library.Globals.HUDAlign = "Hidden"
+        if Library.Globals.HUDFrame then Library.Globals.HUDFrame.Enabled = false end
+        Library:Notify("HUD 已隐藏", false)
+    end
+end, false, "HUD_Align_Setting")
 
     SettingsWin:CreateActionButton("退出", function()
         self:DestroyUI()

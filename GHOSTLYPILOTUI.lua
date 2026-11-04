@@ -1,7 +1,7 @@
 -- ============================================================
 -- GhostlyPilotUI - YC API Wrapper
 -- Author: 茉莉璐 With Deepseek
--- Version: 2.2.3(累死我了你们知道吗)
+-- Version: 2.2.5
 -- ============================================================
 
 if _G.GhostlyPilotUI_Loaded then
@@ -13,7 +13,7 @@ if _G.GhostlyPilotUI_Loaded then
 end
 
 local Library = {}
-local VERSION = "2.2.3"
+local VERSION = "2.2.5"
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -613,68 +613,65 @@ local function buildBaseUI()
 local SakuraFrame = Instance.new("Frame")
 SakuraFrame.Name = "SakuraWallpaper"
 SakuraFrame.Size = UDim2.new(1, 0, 1, 0)
-SakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-SakuraFrame.BackgroundTransparency = 1
+SakuraFrame.BackgroundColor3 = Color3.fromRGB(15, 20, 30)
+SakuraFrame.BackgroundTransparency = 0.1
 SakuraFrame.ZIndex = 0
 SakuraFrame.ClipsDescendants = true
 SakuraFrame.Parent = MainCard
 Instance.new("UICorner", SakuraFrame).CornerRadius = UDim.new(0, 16)
 Library.Globals.SakuraFrame = SakuraFrame
 
-local bgImage = Instance.new("ImageLabel")
-bgImage.Size = UDim2.new(1, 0, 1, 0)
-bgImage.BackgroundTransparency = 1
-bgImage.Image = ""
-
-pcall(function()
-    local cachedImage = "snow_bg.png"
-    if not isfile(cachedImage) then
-        writefile(cachedImage, game:HttpGet("https://hk.gh-proxy.org/https://raw.githubusercontent.com/M0Li1u/GhostlyPilot--/refs/heads/main/Screenshot_20261103_212157.jpg"))
-    end
-    bgImage.Image = getcustomasset(cachedImage)
-end)
-
-bgImage.ScaleType = Enum.ScaleType.Crop
-bgImage.ZIndex = 0
-bgImage.Parent = SakuraFrame
-Instance.new("UICorner", bgImage).CornerRadius = UDim.new(0, 16)
-
-local snowOverlay = Instance.new("Frame")
-snowOverlay.Size = UDim2.new(1, 0, 1, 0)
-snowOverlay.BackgroundTransparency = 1
-snowOverlay.ZIndex = 1
-snowOverlay.ClipsDescendants = true
-snowOverlay.Parent = SakuraFrame
+local SnowLayer = Instance.new("Frame")
+SnowLayer.Name = "SnowLayer"
+SnowLayer.Size = UDim2.new(1, 0, 1, 0)
+SnowLayer.BackgroundTransparency = 1
+SnowLayer.ZIndex = 1
+SnowLayer.ClipsDescendants = true
+SnowLayer.Parent = SakuraFrame
 
 task.spawn(function()
     local SnowParticles = {}
-    for i = 1, 150 do
-        local snow = Instance.new("TextLabel")
-        snow.Size = UDim2.new(0, math.random(4, 10), 0, math.random(4, 10))
-        snow.BackgroundTransparency = 1
-        snow.Text = "❄"
-        snow.Font = Enum.Font.SourceSansBold
-        snow.TextSize = math.random(14, 26)
-        snow.TextColor3 = Color3.fromRGB(255, 255, 255)
-        snow.TextTransparency = math.random(10, 60) / 100
-        snow.Position = UDim2.new(math.random(0, 100) / 100, 0, math.random(-100, 0) / 100, 0)
-        snow.ZIndex = 2
-        snow.Parent = snowOverlay
-        
-        table.insert(SnowParticles, {
-            Label = snow,
-            SpeedY = math.random(30, 80) / 1000,
-            SpeedX = math.random(-15, 15) / 1000,
-            RotSpeed = math.random(-30, 30) / 100
-        })
+    local layerConfigs = {
+        {count = 15, size = 8, speedY = 10, alpha = 0.9},
+        {count = 25, size = 12, speedY = 20, alpha = 0.7},
+        {count = 40, size = 16, speedY = 40, alpha = 0.5},
+        {count = 30, size = 22, speedY = 80, alpha = 0.3},
+        {count = 15, size = 30, speedY = 150, alpha = 0.15}
+    }
+    
+    for i = 1, 5 do
+        local cfg = layerConfigs[i]
+        for j = 1, cfg.count do
+            local snow = Instance.new("TextLabel")
+            snow.Size = UDim2.new(0, cfg.size, 0, cfg.size)
+            snow.BackgroundTransparency = 1
+            snow.Text = "❄️"
+            snow.Font = Enum.Font.SourceSansBold
+            snow.TextSize = cfg.size
+            snow.TextTransparency = cfg.alpha
+            snow.Position = UDim2.new(math.random(0, 100) / 100, 0, math.random(-100, 0) / 100, 0)
+            snow.ZIndex = 2
+            snow.Parent = SnowLayer
+            
+            table.insert(SnowParticles, {
+                Label = snow,
+                SpeedY = (cfg.speedY + math.random(-5, 5)) / 1000,
+                SpeedX = math.random(-10, 10) / 1000,
+                RotSpeed = math.random(-10, 10) / 100,
+                Sway = math.random(1, 5) / 100,
+                Time = math.random(1, 100)
+            })
+        end
     end
 
-    while snowOverlay and snowOverlay.Parent do
+    while SnowLayer and SnowLayer.Parent do
         local dt = RunService.RenderStepped:Wait()
         for _, p in ipairs(SnowParticles) do
             if p.Label and p.Label.Parent then
+                p.Time = p.Time + dt
                 local currentPos = p.Label.Position
-                local newX = currentPos.X.Scale + (p.SpeedX * dt * 60)
+                local swayX = math.sin(p.Time * 2) * p.Sway / 100
+                local newX = currentPos.X.Scale + (p.SpeedX * dt * 60) + swayX
                 local newY = currentPos.Y.Scale + (p.SpeedY * dt * 60)
                 
                 if newY > 1.1 then
@@ -1277,20 +1274,18 @@ local currentHeight = ROW_H
 local function refreshHeight()
     task.defer(function()
         if not Content.Parent then return end
-        local layout = Content:FindFirstChildOfClass("UIListLayout")
         local pad = Content:FindFirstChildOfClass("UIPadding")
         local padTop = pad and pad.PaddingTop.Offset or 0
         local padBottom = pad and pad.PaddingBottom.Offset or 0
         
         local contentH = 0
-        if layout then 
-            contentH = layout.AbsoluteContentSize.Y + padTop + padBottom + 15 
-        else 
-            contentH = Content.AbsoluteSize.Y 
+        local lastChild = Content:FindFirstChild("UIListLayout")
+        if lastChild then
+            local absPos = lastChild.AbsoluteContentSize
+            contentH = absPos.Y
         end
         
-        local targetHeight = open and (ROW_H + contentH) or ROW_H
-           
+        local targetHeight = open and (ROW_H + contentH + padTop + padBottom + 10) or ROW_H
         if currentHeight ~= targetHeight then
             currentHeight = targetHeight
             TweenService:Create(Row, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(1, 0, 0, targetHeight) }):Play()

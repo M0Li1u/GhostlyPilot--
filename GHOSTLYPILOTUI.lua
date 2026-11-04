@@ -912,8 +912,8 @@ updateHUDLayout()
     -- 右侧内容区
     local RightPanel = Instance.new("ScrollingFrame")
     RightPanel.Name = "RightPanel"
-    RightPanel.Size = UDim2.new(1, -204, 1, -20)
-    RightPanel.Position = UDim2.new(0, 194, 0, 10)
+    RightPanel.Size = UDim2.new(1, -204, 1, -50)
+    RightPanel.Position = UDim2.new(0, 194, 0, 40)
     RightPanel.BackgroundColor3 = Library.Theme.CardBg
     RightPanel.BackgroundTransparency = 0.4
     RightPanel.BorderSizePixel = 0
@@ -1152,7 +1152,7 @@ function Library:CreateChildWindow(title)
     lay.VerticalAlignment = Enum.VerticalAlignment.Top
     lay.Parent = panel
     local panelPad = Instance.new("UIPadding")
-    panelPad.PaddingRight = UDim.new(0, 12)
+    panelPad.PaddingRight = UDim.new(0, 4)
     panelPad.PaddingTop = UDim.new(0, 4)
     panelPad.Parent = panel
     self.Globals.SubPanels[title] = panel

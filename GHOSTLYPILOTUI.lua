@@ -669,14 +669,15 @@ task.spawn(function()
             snow.TextSize = actualSize
             snow.TextTransparency = cfg.alpha + (math.random(-5, 5) / 100)
             snow.Rotation = math.random(0, 360)
-            snow.Position = UDim2.new(math.random(0, 100) / 100, 0, math.random(-100, 0) / 100, 0)
+            
+            snow.Position = UDim2.new(math.random(0, 100) / 100, 0, math.random(0, 100) / 100, 0)
             snow.ZIndex = 2
             snow.Parent = SnowLayer
 
             table.insert(SnowParticles, {
                 Label = snow,
-                SpeedY = (cfg.speedY + math.random(-1, 1)) / 1000,
-                SpeedX = -((cfg.speedY * 2) + math.random(-2, 2)) / 1000,
+                SpeedX = (cfg.speedY + math.random(-1, 1)) / 1000,
+                SpeedY = ((cfg.speedY * 0.5) + math.random(-1, 1)) / 1000,
                 RotSpeed = math.random(-30, 30) / 100
             })
         end
@@ -690,13 +691,13 @@ task.spawn(function()
                 local newX = currentPos.X.Scale + (p.SpeedX * dt * 60)
                 local newY = currentPos.Y.Scale + (p.SpeedY * dt * 60)
 
+                if newX > 1.1 then
+                    newX = -0.1
+                    newY = math.random(0, 100) / 100
+                end
                 if newY > 1.1 then
                     newY = -0.1
                     newX = math.random(0, 100) / 100
-                end
-                if newX < -0.1 then
-                    newX = 1.1
-                    newY = math.random(-100, 0) / 100
                 end
 
                 p.Label.Position = UDim2.new(newX, 0, newY, 0)

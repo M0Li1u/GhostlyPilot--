@@ -31,7 +31,7 @@ local parentGui = (gethui and gethui()) or CoreGui
 -- 预设主题
 -- ============================================================
 Library.Presets = {
-    ["樱花粉"] = {
+    ["樱花"] = {
     Accent   = Color3.fromRGB(255, 120, 220),
     Active   = Color3.fromRGB(255, 150, 200),
     Slider   = Color3.fromRGB(255, 120, 180),
@@ -43,7 +43,7 @@ Library.Presets = {
     Off      = Color3.fromRGB(240, 210, 220),
     OffText  = Color3.fromRGB(150, 100, 120),
     },
-    ["深海蓝"] = {
+    ["雪天"] = {
         Accent   = Color3.fromRGB(80, 180, 255),
         Active   = Color3.fromRGB(100, 150, 255),
         Slider   = Color3.fromRGB(60, 120, 220),
@@ -613,71 +613,81 @@ local function buildBaseUI()
 local SakuraFrame = Instance.new("Frame")
 SakuraFrame.Name = "SakuraWallpaper"
 SakuraFrame.Size = UDim2.new(1, 0, 1, 0)
-SakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 235, 245)
-SakuraFrame.BackgroundTransparency = 0.1
+SakuraFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+SakuraFrame.BackgroundTransparency = 1
 SakuraFrame.ZIndex = 0
 SakuraFrame.ClipsDescendants = true
 SakuraFrame.Parent = MainCard
 Instance.new("UICorner", SakuraFrame).CornerRadius = UDim.new(0, 16)
 Library.Globals.SakuraFrame = SakuraFrame
 
-local bgPattern = Instance.new("ImageLabel")
-bgPattern.Size = UDim2.new(1, 0, 1, 0)
-bgPattern.BackgroundTransparency = 1
-bgPattern.Image = "rbxassetid://1316045217"
-bgPattern.ScaleType = Enum.ScaleType.Crop
-bgPattern.ImageTransparency = 0.6
-bgPattern.ZIndex = 0
-bgPattern.Parent = SakuraFrame
-Instance.new("UICorner", bgPattern).CornerRadius = UDim.new(0, 16)
+local bgImage = Instance.new("ImageLabel")
+bgImage.Size = UDim2.new(1, 0, 1, 0)
+bgImage.BackgroundTransparency = 1
+bgImage.Image = ""
+
+pcall(function()
+    local cachedImage = "snow_bg.png"
+    if not isfile(cachedImage) then
+        writefile(cachedImage, game:HttpGet("https://hk.gh-proxy.org/https://raw.githubusercontent.com/M0Li1u/GhostlyPilot--/refs/heads/main/Screenshot_20261103_212157.jpg"))
+    end
+    bgImage.Image = getcustomasset(cachedImage)
+end)
+
+bgImage.ScaleType = Enum.ScaleType.Crop
+bgImage.ZIndex = 0
+bgImage.Parent = SakuraFrame
+Instance.new("UICorner", bgImage).CornerRadius = UDim.new(0, 16)
+
+local snowOverlay = Instance.new("Frame")
+snowOverlay.Size = UDim2.new(1, 0, 1, 0)
+snowOverlay.BackgroundTransparency = 1
+snowOverlay.ZIndex = 1
+snowOverlay.ClipsDescendants = true
+snowOverlay.Parent = SakuraFrame
 
 task.spawn(function()
-    local petalImage = "rbxassetid://8131033444"
-    while SakuraFrame and SakuraFrame.Parent do
-        local petal = Instance.new("ImageLabel")
-        petal.BackgroundTransparency = 1
+    local SnowParticles = {}
+    for i = 1, 150 do
+        local snow = Instance.new("TextLabel")
+        snow.Size = UDim2.new(0, math.random(4, 10), 0, math.random(4, 10))
+        snow.BackgroundTransparency = 1
+        snow.Text = "❄"
+        snow.Font = Enum.Font.SourceSansBold
+        snow.TextSize = math.random(14, 26)
+        snow.TextColor3 = Color3.fromRGB(255, 255, 255)
+        snow.TextTransparency = math.random(10, 60) / 100
+        snow.Position = UDim2.new(math.random(0, 100) / 100, 0, math.random(-100, 0) / 100, 0)
+        snow.ZIndex = 2
+        snow.Parent = snowOverlay
         
-        local isSakura = (Library.Theme.Accent.R > 0.8 and Library.Theme.Accent.B > 0.8)
-        if isSakura then
-            petal.Image = petalImage
-            petal.ImageColor3 = Color3.fromRGB(255, 182, 193)
-            petal.ImageTransparency = math.random(40, 70) / 100 
-            petal.Size = UDim2.fromOffset(math.random(60, 110), math.random(60, 110))
-        else
-            petal.Image = ""
-            local emoji = "🌸"
-            if Library.Theme.Accent.B > 0.8 then emoji = "❄️"
-            elseif Library.Theme.Accent.G > 0.8 then emoji = "🍀"
-            elseif Library.Theme.Accent.R > 0.8 and Library.Theme.Accent.G < 0.5 then emoji = "🍁" end
-            petal.Text = emoji
-            petal.Font = Enum.Font.GothamBold
-            petal.TextSize = math.random(20, 35)
-            petal.TextColor3 = Library.Theme.Accent
-            petal.TextTransparency = math.random(20, 50) / 100
-            petal.Size = UDim2.fromOffset(40, 40)
-        end
-        
-        local startX = math.random(-50, 650)
-        petal.Position = UDim2.new(0, startX, 0, -100)
-        petal.ZIndex = 1
-        petal.Parent = SakuraFrame
-
-        local fallTime = math.random(10, 25) / 10
-        local endX = startX + math.random(-100, 100)
-        local startRot = math.random(0, 360)
-        petal.Rotation = startRot
-
-        local tween = TweenService:Create(petal, TweenInfo.new(fallTime, Enum.EasingStyle.Linear), {
-            Position = UDim2.new(0, endX, 1, 100),
-            Rotation = startRot + math.random(180, 360)
+        table.insert(SnowParticles, {
+            Label = snow,
+            SpeedY = math.random(30, 80) / 1000,
+            SpeedX = math.random(-15, 15) / 1000,
+            RotSpeed = math.random(-30, 30) / 100
         })
-        tween:Play()
+    end
 
-        tween.Completed:Connect(function()
-            petal:Destroy()
-        end)
+    while snowOverlay and snowOverlay.Parent do
+        local dt = RunService.RenderStepped:Wait()
+        for _, p in ipairs(SnowParticles) do
+            if p.Label and p.Label.Parent then
+                local currentPos = p.Label.Position
+                local newX = currentPos.X.Scale + (p.SpeedX * dt * 60)
+                local newY = currentPos.Y.Scale + (p.SpeedY * dt * 60)
+                
+                if newY > 1.1 then
+                    newY = -0.1
+                    newX = math.random(0, 100) / 100
+                end
+                if newX > 1.1 then newX = -0.1 end
+                if newX < -0.1 then newX = 1.1 end
 
-        task.wait(math.random(2, 5) / 100)
+                p.Label.Position = UDim2.new(newX, 0, newY, 0)
+                p.Label.Rotation = p.Label.Rotation + (p.RotSpeed * dt * 60)
+            end
+        end
     end
 end)
 
@@ -2273,7 +2283,7 @@ function Library:_BuildBuiltinWindows()
 
     local themeMod = SettingsWin:CreateModule("主题", function() end)
 
-    local themeOrder = {"樱花粉", "深海蓝", "薄荷绿", "暗夜黑", "烈焰红"}
+    local themeOrder = {"樱花", "雪天", "薄荷绿", "暗夜黑", "烈焰红"}
     local themeNames = {}
     for _, name in ipairs(themeOrder) do
         if self.Presets[name] then

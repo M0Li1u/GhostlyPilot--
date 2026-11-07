@@ -2371,6 +2371,12 @@ function Library:Init()
     self.Globals.Initialized = true
 
     local savedThemeName = self:_LoadThemeName()
+
+    if not savedThemeName or not self.Presets[savedThemeName] then
+        savedThemeName = "雪天"
+        self:_SaveThemeName(savedThemeName)
+    end
+
     if savedThemeName and self.Presets[savedThemeName] then
         for k, v in pairs(self.Presets[savedThemeName]) do
             self.Theme[k] = v

@@ -1060,7 +1060,7 @@ updateHUDLayout()
     RightPanel.BackgroundColor3 = Library.Theme.CardBg
     RightPanel.BackgroundTransparency = 0.4
     RightPanel.BorderSizePixel = 0
-    RightPanel.ScrollBarThickness = 4
+    RightPanel.ScrollBarThickness = 0
     RightPanel.ScrollBarImageColor3 = Library.Theme.Stroke
     RightPanel.CanvasSize = UDim2.new(0, 0, 0, 0)
     RightPanel.AutomaticCanvasSize = Enum.AutomaticSize.Y
@@ -1075,8 +1075,8 @@ updateHUDLayout()
     local RightPad = Instance.new("UIPadding")
     RightPad.PaddingTop = UDim.new(0, 12)
     RightPad.PaddingBottom = UDim.new(0, 12)
-    RightPad.PaddingLeft = UDim.new(0, 12)
-    RightPad.PaddingRight = UDim.new(0, 16)
+    RightPad.PaddingLeft = UDim.new(0, 10)
+    RightPad.PaddingRight = UDim.new(0, 10)
     RightPad.Parent = RightPanel
 
     Library.Globals.DragHolder      = DragHolder
@@ -1339,7 +1339,7 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon)
     Row.Name = title
     Row.BackgroundColor3 = self.Theme.CardBg
     Row.BackgroundTransparency = 0
-    Row.Size = UDim2.new(1, -12, 0, ROW_H)
+    Row.Size = UDim2.new(1, 0, 0, ROW_H)
     Row.ClipsDescendants = true
     Row.Parent = parent
     Instance.new("UICorner", Row).CornerRadius = UDim.new(0, 10)

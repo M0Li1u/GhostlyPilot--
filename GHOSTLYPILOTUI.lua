@@ -196,6 +196,15 @@ function Library:ApplyTheme(name)
         self.Theme[k] = v
     end
     self.COLOR_ON = self.Theme.Accent
+    
+    if self.Globals.bgImage then
+        if name == "雪天" then
+            self.Globals.bgImage.Visible = true
+        else
+            self.Globals.bgImage.Visible = false
+        end
+    end
+
     self:_RefreshTheme()
     self:_RefreshHUDGradient()
     self:_RefreshCardGradient()
@@ -622,6 +631,7 @@ SakuraFrame.ClipsDescendants = true
 SakuraFrame.Parent = MainCard
 Instance.new("UICorner", SakuraFrame).CornerRadius = UDim.new(0, 16)
 Library.Globals.SakuraFrame = SakuraFrame
+Library.Globals.bgImage = bgImage
 
 local bgImage = Instance.new("ImageLabel")
 bgImage.Size = UDim2.new(1, 0, 1, 0)
@@ -1071,6 +1081,12 @@ function Library:WrapModule(btn, moreBtn, content, title)
     end
     function Mod:CreateColorPicker(txt, defaultColor, cb, cfgKey)
         Library:AddColorPicker(content, txt, defaultColor, cb, cfgKey)
+    end
+    function Mod:CreateTextLabel(txt, color, alignment, size)
+        Library:AddTextLabel(content, txt, color, alignment, size)
+    end
+    function Mod:CreateInstantButton(txt, cb, icon)
+        Library:AddInstantButton(content, txt, cb, icon)
     end
     return Mod
 end
@@ -2056,6 +2072,105 @@ function Library:AddActionButton(parent, title, callback, icon)
         }):Play()
         TweenService:Create(Label, TweenInfo.new(0.25), {
             TextColor3 = Library.Theme.TextDark
+        }):Play()
+    end)
+
+    return Btn
+end
+
+function Library:AddTextLabel(parent, text, color, alignment, size)
+    local L = Instance.new("TextLabel")
+    L.Parent = parent
+    L.BackgroundTransparency = 1
+    L.Size = UDim2.new(1, 0, 0, 0)
+    L.AutomaticSize = Enum.AutomaticSize.Y
+    L.Font = Enum.Font.Gotham
+    L.TextSize = size or 13
+    L.Text = text
+    L.TextWrapped = true
+    
+    local textColor = color or self.Theme.TextGray
+    L.TextColor3 = textColor
+    L.TextXAlignment = alignment or Enum.TextXAlignment.Left
+    
+    local pad = Instance.new("UIPadding")
+    pad.PaddingLeft = UDim.new(0, 6)
+    pad.PaddingRight = UDim.new(0, 6)
+    pad.PaddingTop = UDim.new(0, 2)
+    pad.PaddingBottom = UDim.new(0, 2)
+    pad.Parent = L
+    
+    return L
+end
+
+function Library:AddInstantButton(parent, text, callback, icon)
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(1, 0, 0, 36)
+    Btn.BackgroundColor3 = self.Theme.CardBg
+    Btn.BackgroundTransparency = 0
+    Btn.Text = ""
+    Btn.AutoButtonColor = false
+    Btn.ClipsDescendants = true
+    Btn.Parent = parent
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 8)
+    self:_BindTheme(Btn, function() return Library.Theme.CardBg end)
+
+    local stroke = Instance.new("UIStroke", Btn)
+    stroke.Color = self.Theme.Stroke
+    stroke.Thickness = 1
+    self:_BindStroke(stroke, function() return Library.Theme.Stroke end)
+
+    local IconLabel = Instance.new("ImageLabel")
+    IconLabel.Size = UDim2.new(0, 20, 0, 20)
+    IconLabel.Position = UDim2.new(0, 10, 0.5, 0)
+    IconLabel.AnchorPoint = Vector2.new(0, 0.5)
+    IconLabel.BackgroundTransparency = 1
+    IconLabel.ScaleType = Enum.ScaleType.Fit
+    IconLabel.Image = icon or "rbxassetid://127629592269434"
+    IconLabel.Parent = Btn
+
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(1, -45, 1, 0)
+    Label.Position = UDim2.new(0, 38, 0, 0)
+    Label.BackgroundTransparency = 1
+    Label.Text = text
+    Label.Font = Enum.Font.GothamBold
+    Label.TextColor3 = self.Theme.TextDark
+    Label.TextSize = 14
+    Label.TextXAlignment = Enum.TextXAlignment.Left
+    Label.Parent = Btn
+    self:_BindText(Label, function() return Library.Theme.TextDark end)
+
+    local Flash = Instance.new("Frame")
+    Flash.Size = UDim2.new(0, 0, 0, 0)
+    Flash.AnchorPoint = Vector2.new(0.5, 0.5)
+    Flash.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+    Flash.BackgroundTransparency = 0.5
+    Flash.ZIndex = 5
+    Flash.Parent = Btn
+    Instance.new("UICorner", Flash).CornerRadius = UDim.new(1, 0)
+
+    Btn.MouseButton1Click:Connect(function()
+        Flash.Position = UDim2.new(0.5, 0, 0.5, 0)
+        Flash.Size = UDim2.new(0, 0, 0, 0)
+        
+        local sizeTw = TweenService:Create(Flash, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+            Size = UDim2.new(3, 0, 3, 0),
+            BackgroundTransparency = 1
+        })
+        sizeTw:Play()
+
+        Btn.BackgroundColor3 = self.Theme.Accent
+        Label.TextColor3 = Color3.fromRGB(255, 255, 255)
+        
+        if callback then pcall(callback) end
+
+        task.wait(0.1)
+        TweenService:Create(Btn, TweenInfo.new(0.25), {
+            BackgroundColor3 = self.Theme.CardBg
+        }):Play()
+        TweenService:Create(Label, TweenInfo.new(0.25), {
+            TextColor3 = self.Theme.TextDark
         }):Play()
     end)
 

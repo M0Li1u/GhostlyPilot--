@@ -1,7 +1,7 @@
 -- ============================================================
 -- GhostlyPilotUI - YC API Wrapper
 -- Author: 茉莉璐 With Deepseek
--- Version: 2.2.5
+-- Version: 2.2.8
 -- ============================================================
 
 if _G.GhostlyPilotUI_Loaded then
@@ -13,7 +13,7 @@ if _G.GhostlyPilotUI_Loaded then
 end
 
 local Library = {}
-local VERSION = "2.2.5"
+local VERSION = "2.2.8"
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -197,11 +197,11 @@ function Library:ApplyTheme(name)
     end
     self.COLOR_ON = self.Theme.Accent
     
-    if self.Globals.bgImage then
+    if self.Globals.SetEffect then
         if name == "雪天" then
-            self.Globals.bgImage.Visible = true
+            self.Globals.SetEffect("Snow")
         else
-            self.Globals.bgImage.Visible = false
+            self.Globals.SetEffect("Sakura")
         end
     end
 
@@ -621,6 +621,9 @@ local function buildBaseUI()
     MainGradient.Parent = MainCard
     Library.Globals.MainGradient = MainGradient
     
+-- ==========================================
+-- 1. 背景容器
+-- ==========================================
 local SakuraFrame = Instance.new("Frame")
 SakuraFrame.Name = "SakuraWallpaper"
 SakuraFrame.Size = UDim2.new(1, 0, 1, 0)
@@ -631,12 +634,18 @@ SakuraFrame.ClipsDescendants = true
 SakuraFrame.Parent = MainCard
 Instance.new("UICorner", SakuraFrame).CornerRadius = UDim.new(0, 16)
 Library.Globals.SakuraFrame = SakuraFrame
-Library.Globals.bgImage = bgImage
 
+-- ==========================================
+-- 2. 雪天背景图 (保留原版)
+-- ==========================================
 local bgImage = Instance.new("ImageLabel")
 bgImage.Size = UDim2.new(1, 0, 1, 0)
 bgImage.BackgroundTransparency = 1
 bgImage.Image = ""
+bgImage.ScaleType = Enum.ScaleType.Crop
+bgImage.ZIndex = 0
+bgImage.Parent = SakuraFrame
+Instance.new("UICorner", bgImage).CornerRadius = UDim.new(0, 16)
 
 pcall(function()
     local cachedImage = "snow_bg.png"
@@ -645,22 +654,50 @@ pcall(function()
     end
     bgImage.Image = getcustomasset(cachedImage)
 end)
+Library.Globals.bgImage = bgImage -- 修复了报错，放在定义之后
 
-bgImage.ScaleType = Enum.ScaleType.Crop
-bgImage.ZIndex = 0
-bgImage.Parent = SakuraFrame
-Instance.new("UICorner", bgImage).CornerRadius = UDim.new(0, 16)
+-- ==========================================
+-- 3. 樱花粉色渐变背景
+-- ==========================================
+local sakuraGradient = Instance.new("Frame")
+sakuraGradient.Size = UDim2.new(1, 0, 1, 0)
+sakuraGradient.BackgroundTransparency = 0
+sakuraGradient.ZIndex = 0
+sakuraGradient.Visible = false
+sakuraGradient.Parent = SakuraFrame
+Instance.new("UICorner", sakuraGradient).CornerRadius = UDim.new(0, 16)
+Library.Globals.sakuraGradient = sakuraGradient
 
+local bgGradient = Instance.new("UIGradient")
+bgGradient.Rotation = 90
+bgGradient.Color = ColorSequence.new{
+    ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 235, 240)),
+    ColorSequenceKeypoint.new(0.5, Color3.fromRGB(255, 192, 210)),
+    ColorSequenceKeypoint.new(1, Color3.fromRGB(215, 150, 170))
+}
+bgGradient.Parent = sakuraGradient
+
+-- ==========================================
+-- 4. 雪花/樱花 特效容器
+-- ==========================================
 local SnowLayer = Instance.new("Frame")
-SnowLayer.Name = "SnowLayer"
+SnowLayer.Name = "EffectsLayer"
 SnowLayer.Size = UDim2.new(1, 0, 1, 0)
 SnowLayer.BackgroundTransparency = 1
 SnowLayer.ZIndex = 1
 SnowLayer.ClipsDescendants = true
 SnowLayer.Parent = SakuraFrame
+Library.Globals.EffectsLayer = SnowLayer
 
-task.spawn(function()
-    local SnowParticles = {}
+-- 当前特效模式: "Snow" 或 "Sakura"
+local currentEffect = "Snow" 
+
+-- 雪花生成逻辑
+local snowParticles = {}
+local function spawnSnow()
+    for _, p in ipairs(snowParticles) do if p.Label then p.Label:Destroy() end end
+    snowParticles = {}
+    
     local layerConfigs = {
         {count = 50, sizeMin = 6,  sizeMax = 10, speedY = 2,  alpha = 0.9},
         {count = 40, sizeMin = 12, sizeMax = 16, speedY = 4,  alpha = 0.7},
@@ -681,39 +718,125 @@ task.spawn(function()
             snow.TextSize = actualSize
             snow.TextTransparency = cfg.alpha + (math.random(-5, 5) / 100)
             snow.Rotation = math.random(0, 360)
-            
             snow.Position = UDim2.new(math.random(0, 100) / 100, 0, math.random(0, 100) / 100, 0)
             snow.ZIndex = 2
             snow.Parent = SnowLayer
 
-            table.insert(SnowParticles, {
+            table.insert(snowParticles, {
                 Label = snow,
+                Type = "Snow",
                 SpeedX = (cfg.speedY + math.random(-1, 1)) / 1000,
                 SpeedY = ((cfg.speedY * 0.5) + math.random(-1, 1)) / 1000,
                 RotSpeed = math.random(-30, 30) / 100
             })
         end
     end
+end
 
+-- 樱花生成逻辑
+local cachedSakura = "sakura_bg.png"
+local SAKURA_URL = "https://hk.gh-proxy.org/https://raw.githubusercontent.com/M0Li1u/GhostlyPilot--/refs/heads/main/IMG_20261108_095615.png"
+local sakuraImage = ""
+pcall(function()
+    if not isfile(cachedSakura) then 
+        writefile(cachedSakura, game:HttpGet(SAKURA_URL)) 
+    end
+    sakuraImage = getcustomasset(cachedSakura)
+end)
+
+local function spawnSakura()
+    for _, p in ipairs(snowParticles) do if p.Label then p.Label:Destroy() end end
+    snowParticles = {}
+    
+    for i = 1, 400 do
+        local petal = Instance.new("ImageLabel")
+        petal.BackgroundTransparency = 1
+        petal.Image = sakuraImage
+        petal.ScaleType = Enum.ScaleType.Fit
+        
+        local size = math.random(15, 80)
+        petal.Size = UDim2.new(0, size, 0, size)
+        petal.Position = UDim2.new(math.random() * 1.2 - 0.1, 0, math.random() * 1.2 - 0.1, 0)
+        petal.Rotation = math.random(0, 360)
+        
+        if size > 60 then
+            petal.ImageTransparency = math.random(60, 85) / 100
+            petal.ZIndex = 5
+        elseif size > 40 then
+            petal.ImageTransparency = math.random(30, 60) / 100
+            petal.ZIndex = 4
+        else
+            petal.ImageTransparency = math.random(10, 30) / 100
+            petal.ZIndex = 2
+        end
+        
+        petal.Parent = SnowLayer
+        
+        table.insert(snowParticles, {
+            Label = petal,
+            Type = "Sakura",
+            Size = size,
+            RotSpeed = (math.random(-20, 20) / 100) * (size / 40),
+            Wobble = math.random(0, 10),
+            WobbleSpeed = math.random(5, 15) / 100,
+            DriftY = (math.random(5, 15) / 100) * (size / 20),
+            DriftX = (math.random(-10, 10) / 100) * (size / 20),
+            BaseX = petal.Position.X.Scale,
+            BaseY = petal.Position.Y.Scale
+        })
+    end
+end
+
+-- 供外部切换主题调用的方法
+Library.Globals.SetEffect = function(mode)
+    if currentEffect == mode then return end
+    currentEffect = mode
+    
+    if mode == "Snow" then
+        Library.Globals.bgImage.Visible = true
+        Library.Globals.sakuraGradient.Visible = false
+        spawnSnow()
+    elseif mode == "Sakura" then
+        Library.Globals.bgImage.Visible = false
+        Library.Globals.sakuraGradient.Visible = true
+        spawnSakura()
+    end
+end
+
+-- 默认初始化雪花
+spawnSnow()
+
+-- 统一动画循环（根据不同类型执行不同物理计算）
+task.spawn(function()
     while SnowLayer and SnowLayer.Parent do
         local dt = RunService.RenderStepped:Wait()
-        for _, p in ipairs(SnowParticles) do
+        local time = tick()
+        
+        for _, p in ipairs(snowParticles) do
             if p.Label and p.Label.Parent then
-                local currentPos = p.Label.Position
-                local newX = currentPos.X.Scale + (p.SpeedX * dt * 60)
-                local newY = currentPos.Y.Scale + (p.SpeedY * dt * 60)
-
-                if newX > 1.1 then
-                    newX = -0.1
-                    newY = math.random(0, 100) / 100
+                if p.Type == "Snow" then
+                    local currentPos = p.Label.Position
+                    local newX = currentPos.X.Scale + (p.SpeedX * dt * 60)
+                    local newY = currentPos.Y.Scale + (p.SpeedY * dt * 60)
+                    if newX > 1.1 then newX = -0.1; newY = math.random(0, 100) / 100 end
+                    if newY > 1.1 then newY = -0.1; newX = math.random(0, 100) / 100 end
+                    p.Label.Position = UDim2.new(newX, 0, newY, 0)
+                    p.Label.Rotation = p.Label.Rotation + (p.RotSpeed * dt * 60)
+                    
+                elseif p.Type == "Sakura" then
+                    p.Label.Rotation = p.Label.Rotation + (p.RotSpeed * dt * 60)
+                    local waveX = math.sin(time * p.WobbleSpeed + p.Wobble) * 0.02
+                    local waveY = math.cos(time * p.WobbleSpeed + p.Wobble) * 0.02
+                    
+                    p.BaseX = p.BaseX + (p.DriftX * dt * 2)
+                    p.BaseY = p.BaseY + (p.DriftY * dt * 2)
+                    
+                    if p.BaseY > 1.2 then p.BaseY = -0.2; p.BaseX = math.random() end
+                    if p.BaseX < -0.2 then p.BaseX = 1.2 end
+                    if p.BaseX > 1.2 then p.BaseX = -0.2 end
+                    
+                    p.Label.Position = UDim2.new(p.BaseX + waveX, 0, p.BaseY + waveY, 0)
                 end
-                if newY > 1.1 then
-                    newY = -0.1
-                    newX = math.random(0, 100) / 100
-                end
-
-                p.Label.Position = UDim2.new(newX, 0, newY, 0)
-                p.Label.Rotation = p.Label.Rotation + (p.RotSpeed * dt * 60)
             end
         end
     end

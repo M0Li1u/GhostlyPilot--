@@ -1308,9 +1308,9 @@ function Library:CreateChildWindow(title)
     lay.Parent = panel
 
     local panelPad = Instance.new("UIPadding")
-    panelPad.PaddingRight = UDim.new(0, 4)
-    panelPad.PaddingLeft = UDim.new(0, 4)
-    panelPad.PaddingTop = UDim.new(0, 4)
+    panelPad.PaddingRight = UDim.new(0, 6)
+    panelPad.PaddingLeft = UDim.new(0, 6)
+    panelPad.PaddingTop = UDim.new(0, 6)
     panelPad.Parent = panel
 
     self.Globals.SubPanels[title] = panel

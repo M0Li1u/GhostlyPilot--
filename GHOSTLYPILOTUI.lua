@@ -714,7 +714,7 @@ local function spawnSnow()
             local actualSize = math.random(cfg.sizeMin, cfg.sizeMax)
             snow.Size = UDim2.new(0, actualSize, 0, actualSize)
             snow.BackgroundTransparency = 1
-            snow.Text = "●"
+            snow.Text = "❄️"
             snow.Font = Enum.Font.SourceSansBold
             snow.TextSize = actualSize
             snow.TextTransparency = cfg.alpha + (math.random(-5, 5) / 100)
@@ -1826,6 +1826,40 @@ function Library:AddDropdown(parent, txt, opts, callback, multiple, cfgKey)
         TweenService:Create(Base, TweenInfo.new(0.25), {Size = UDim2.new(1, 0, 0, nh)}):Play()
     end)
 
+local updateDropdown
+updateDropdown = function(newOpts)
+    opts = newOpts
+    for _, child in ipairs(Opts:GetChildren()) do
+        if child:IsA("TextButton") then child:Destroy() end
+    end
+    if open then
+        Base.Size = UDim2.new(1, 0, 0, H + #opts * optH)
+        Opts.Size = UDim2.new(1, 0, 0, #opts * optH)
+    end
+    for _, o in ipairs(opts) do
+        local Ob = Instance.new("TextButton")
+        Ob.Parent = Opts
+        Ob.Size = UDim2.new(1, 0, 0, optH)
+        Ob.BackgroundTransparency = 1
+        Ob.Text = o
+        Ob.Font = Enum.Font.Gotham
+        Ob.TextSize = 14
+        Ob.TextColor3 = self.Theme.TextDark
+        Ob.AutoButtonColor = false
+        Ob.TextXAlignment = Enum.TextXAlignment.Left
+        self:_BindText(Ob, function() return Library.Theme.TextDark end)
+
+        Ob.MouseButton1Click:Connect(function()
+            L.Text = txt .. ": " .. o .. " ▼"
+            open = false
+            TweenService:Create(Base, TweenInfo.new(0.25), {Size = UDim2.new(1, 0, 0, H)}):Play()
+            if cfgKey then Library:SetConfig(cfgKey, o) end
+            pcall(callback, o)
+        end)
+    end
+end
+
+Base.UpdateOptions = updateDropdown
     return Base
 end
 

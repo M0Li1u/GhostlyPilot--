@@ -1885,6 +1885,8 @@ function Library:AddDropdown(parent, txt, opts, callback, multiple, cfgKey)
     end
     
     Base.UpdateOptions = updateDropdown
+    Base.UpdateOptionsFunc = updateDropdown
+    Base.UpdateOptionsBindable = true
     
     return Base
 end

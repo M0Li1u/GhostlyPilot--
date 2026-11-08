@@ -1884,9 +1884,10 @@ function Library:AddDropdown(parent, txt, opts, callback, multiple, cfgKey)
         end
     end
     
-    Base.UpdateOptions = updateDropdown
-    Base.UpdateOptionsFunc = updateDropdown
-    Base.UpdateOptionsBindable = true
+        pcall(function()
+        Base.UpdateOptions = updateDropdown
+        Base.UpdateOptionsFunc = updateDropdown
+    end)
     
     return Base
 end

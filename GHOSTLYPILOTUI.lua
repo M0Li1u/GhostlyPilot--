@@ -1482,6 +1482,8 @@ local function refreshHeight()
         end
     end)
 end
+Library.Globals._RefreshHeightMap = Library.Globals._RefreshHeightMap or {}
+Library.Globals._RefreshHeightMap[Content] = refreshHeight
 
 Content:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() task.defer(refreshHeight) end)
 local layoutObj = Content:FindFirstChildOfClass("UIListLayout")
@@ -2219,15 +2221,16 @@ ClickBtn.MouseButton1Click:Connect(function()
         end)
     end
     
-    -- ⚠️ 强行通知外层模块更新高度（防止被切掉）
-    local parent = Container.Parent
-    while parent do
-        if parent.Name ~= "Content" and parent:FindFirstChild("Content") then
-            -- 模拟点击一下外面的加号，触发它的高度重算，但又不改变它真实状态
-            break
-        end
-        parent = parent.Parent
+local p = Container.Parent
+while p do
+    if p.Name == "Content" and Library.Globals._RefreshHeightMap and Library.Globals._RefreshHeightMap[p] then
+        task.delay(0.3, function()
+            Library.Globals._RefreshHeightMap[p]()
+        end)
+        break
     end
+    p = p.Parent
+end
 end)
 
     local settings = {}
@@ -2706,21 +2709,18 @@ function Library:Init()
     end
     self.Globals.Initialized = true
 
-local savedThemeName = self:_LoadThemeName()
-
-if not savedThemeName or not self.Presets[savedThemeName] then
-    savedThemeName = "雪天"
-    self:_SaveThemeName(savedThemeName)
-end
-
-self.CurrentThemeName = savedThemeName -- 就是加上这一句！
-
-if savedThemeName and self.Presets[savedThemeName] then
-    for k, v in pairs(self.Presets[savedThemeName]) do
-        self.Theme[k] = v
+    local savedThemeName = self:_LoadThemeName()
+    if not savedThemeName or not self.Presets[savedThemeName] then
+        savedThemeName = "雪天"
+        self:_SaveThemeName(savedThemeName)
     end
-    self.COLOR_ON = self.Theme.Accent
-end
+    self.CurrentThemeName = savedThemeName
+    if self.Presets[savedThemeName] then
+        for k, v in pairs(self.Presets[savedThemeName]) do
+            self.Theme[k] = v
+        end
+        self.COLOR_ON = self.Theme.Accent
+    end
 
     initSounds()
     buildBaseUI()

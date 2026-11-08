@@ -2133,29 +2133,39 @@ function Library:AddColorPicker(parent, txt, defaultColor, callback, cfgKey)
     updateCursor()
     updateDisplays()
 
-    local open = false
-    ClickBtn.MouseButton1Click:Connect(function()
-        open = not open
-        if open then
-            Picker.Visible = true
-            TweenService:Create(Container, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {
-                Size = UDim2.new(1, 0, 0, 36 + 170)
-            }):Play()
-            TweenService:Create(Picker, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {
-                Size = UDim2.new(1, 0, 0, 170)
-            }):Play()
-        else
-            TweenService:Create(Container, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), {
-                Size = UDim2.new(1, 0, 0, 36)
-            }):Play()
-            TweenService:Create(Picker, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), {
-                Size = UDim2.new(1, 0, 0, 0)
-            }):Play()
-            task.delay(0.3, function()
-                if not open then Picker.Visible = false end
-            end)
+local open = false
+ClickBtn.MouseButton1Click:Connect(function()
+    open = not open
+    if open then
+        Picker.Visible = true
+        TweenService:Create(Container, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {
+            Size = UDim2.new(1, 0, 0, 36 + 170)
+        }):Play()
+        TweenService:Create(Picker, TweenInfo.new(0.3, Enum.EasingStyle.Exponential), {
+            Size = UDim2.new(1, 0, 0, 170)
+        }):Play()
+    else
+        TweenService:Create(Container, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), {
+            Size = UDim2.new(1, 0, 0, 36)
+        }):Play()
+        TweenService:Create(Picker, TweenInfo.new(0.25, Enum.EasingStyle.Exponential), {
+            Size = UDim2.new(1, 0, 0, 0)
+        }):Play()
+        task.delay(0.3, function()
+            if not open then Picker.Visible = false end
+        end)
+    end
+    
+    -- ⚠️ 强行通知外层模块更新高度（防止被切掉）
+    local parent = Container.Parent
+    while parent do
+        if parent.Name ~= "Content" and parent:FindFirstChild("Content") then
+            -- 模拟点击一下外面的加号，触发它的高度重算，但又不改变它真实状态
+            break
         end
-    end)
+        parent = parent.Parent
+    end
+end)
 
     local settings = {}
     function settings:Set(color)
@@ -2221,28 +2231,34 @@ function Library:AddActionButton(parent, title, callback, icon)
 end
 
 function Library:AddTextLabel(parent, text, color, alignment, size)
-    local L = Instance.new("TextLabel")
-    L.Parent = parent
-    L.BackgroundTransparency = 1
-    L.Size = UDim2.new(1, 0, 0, 0)
-    L.AutomaticSize = Enum.AutomaticSize.Y
-    L.Font = Enum.Font.Gotham
-    L.TextSize = size or 13
-    L.Text = text
-    L.TextWrapped = true
-    
-    local textColor = color or self.Theme.TextGray
-    L.TextColor3 = textColor
-    L.TextXAlignment = alignment or Enum.TextXAlignment.Left
-    
-    local pad = Instance.new("UIPadding")
-    pad.PaddingLeft = UDim.new(0, 6)
-    pad.PaddingRight = UDim.new(0, 6)
-    pad.PaddingTop = UDim.new(0, 2)
-    pad.PaddingBottom = UDim.new(0, 2)
-    pad.Parent = L
-    
-    return L
+    local Btn = Instance.new("TextButton")
+    Btn.Size = UDim2.new(1, 0, 0, 36)
+    Btn.BackgroundColor3 = self.Theme.CardBg
+    Btn.BackgroundTransparency = 0
+    Btn.Text = ""
+    Btn.AutoButtonColor = false
+    Btn.Parent = parent
+    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 8)
+    self:_BindTheme(Btn, function() return Library.Theme.CardBg end)
+
+    local stroke = Instance.new("UIStroke", Btn)
+    stroke.Color = self.Theme.Stroke
+    stroke.Thickness = 1
+    self:_BindStroke(stroke, function() return Library.Theme.Stroke end)
+
+    local Label = Instance.new("TextLabel")
+    Label.Size = UDim2.new(1, -20, 1, 0)
+    Label.Position = UDim2.new(0, 10, 0, 0)
+    Label.BackgroundTransparency = 1
+    Label.Text = text
+    Label.Font = Enum.Font.GothamMedium
+    Label.TextColor3 = color or self.Theme.TextGray
+    Label.TextSize = size or 14
+    Label.TextXAlignment = alignment or Enum.TextXAlignment.Left
+    Label.Parent = Btn
+    self:_BindText(Label, function() return color or Library.Theme.TextGray end)
+
+    return Btn
 end
 
 function Library:AddInstantButton(parent, text, callback, icon)

@@ -714,7 +714,7 @@ local function spawnSnow()
             local actualSize = math.random(cfg.sizeMin, cfg.sizeMax)
             snow.Size = UDim2.new(0, actualSize, 0, actualSize)
             snow.BackgroundTransparency = 1
-            snow.Text = "❄️"
+            snow.Text = "●"
             snow.Font = Enum.Font.SourceSansBold
             snow.TextSize = actualSize
             snow.TextTransparency = cfg.alpha + (math.random(-5, 5) / 100)
@@ -804,8 +804,17 @@ Library.Globals.SetEffect = function(mode)
     end
 end
 
--- 默认初始化雪花
-spawnSnow()
+if Library.CurrentThemeName == "雪天" then
+    Library.Globals.bgImage.Visible = true
+    Library.Globals.sakuraGradient.Visible = false
+    spawnSnow()
+    currentEffect = "Snow"
+else
+    Library.Globals.bgImage.Visible = false
+    Library.Globals.sakuraGradient.Visible = true
+    spawnSakura()
+    currentEffect = "Sakura"
+end
 
 -- 统一动画循环（根据不同类型执行不同物理计算）
 task.spawn(function()
@@ -1067,7 +1076,7 @@ updateHUDLayout()
     RightPad.PaddingTop = UDim.new(0, 12)
     RightPad.PaddingBottom = UDim.new(0, 12)
     RightPad.PaddingLeft = UDim.new(0, 12)
-    RightPad.PaddingRight = UDim.new(0, 12)
+    RightPad.PaddingRight = UDim.new(0, 16)
     RightPad.Parent = RightPanel
 
     Library.Globals.DragHolder      = DragHolder
@@ -1330,7 +1339,7 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon)
     Row.Name = title
     Row.BackgroundColor3 = self.Theme.CardBg
     Row.BackgroundTransparency = 0
-    Row.Size = UDim2.new(1, 0, 0, ROW_H)
+    Row.Size = UDim2.new(1, -12, 0, ROW_H)
     Row.ClipsDescendants = true
     Row.Parent = parent
     Instance.new("UICorner", Row).CornerRadius = UDim.new(0, 10)
@@ -2618,19 +2627,21 @@ function Library:Init()
     end
     self.Globals.Initialized = true
 
-    local savedThemeName = self:_LoadThemeName()
+local savedThemeName = self:_LoadThemeName()
 
-    if not savedThemeName or not self.Presets[savedThemeName] then
-        savedThemeName = "雪天"
-        self:_SaveThemeName(savedThemeName)
-    end
+if not savedThemeName or not self.Presets[savedThemeName] then
+    savedThemeName = "雪天"
+    self:_SaveThemeName(savedThemeName)
+end
 
-    if savedThemeName and self.Presets[savedThemeName] then
-        for k, v in pairs(self.Presets[savedThemeName]) do
-            self.Theme[k] = v
-        end
-        self.COLOR_ON = self.Theme.Accent
+self.CurrentThemeName = savedThemeName -- 就是加上这一句！
+
+if savedThemeName and self.Presets[savedThemeName] then
+    for k, v in pairs(self.Presets[savedThemeName]) do
+        self.Theme[k] = v
     end
+    self.COLOR_ON = self.Theme.Accent
+end
 
     initSounds()
     buildBaseUI()

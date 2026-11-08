@@ -666,7 +666,7 @@ task.spawn(function()
             local actualSize = math.random(cfg.sizeMin, cfg.sizeMax)
             snow.Size = UDim2.new(0, actualSize, 0, actualSize)
             snow.BackgroundTransparency = 1
-            snow.Text = "❄️"
+            snow.Text = "●"
             snow.Font = Enum.Font.SourceSansBold
             snow.TextSize = actualSize
             snow.TextTransparency = cfg.alpha + (math.random(-5, 5) / 100)

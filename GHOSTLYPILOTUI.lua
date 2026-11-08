@@ -634,6 +634,7 @@ SakuraFrame.ClipsDescendants = true
 SakuraFrame.Parent = MainCard
 Instance.new("UICorner", SakuraFrame).CornerRadius = UDim.new(0, 16)
 Library.Globals.SakuraFrame = SakuraFrame
+Instance.new("UICorner", SakuraFrame).CornerRadius = UDim.new(0, 16) 
 
 -- ==========================================
 -- 2. 雪天背景图 (保留原版)
@@ -713,7 +714,7 @@ local function spawnSnow()
             local actualSize = math.random(cfg.sizeMin, cfg.sizeMax)
             snow.Size = UDim2.new(0, actualSize, 0, actualSize)
             snow.BackgroundTransparency = 1
-            snow.Text = "●"
+            snow.Text = "❄️"
             snow.Font = Enum.Font.SourceSansBold
             snow.TextSize = actualSize
             snow.TextTransparency = cfg.alpha + (math.random(-5, 5) / 100)
@@ -1170,17 +1171,22 @@ end
 local function CreateWindowObj(name)
     local Win = {}
     local panel = Library.Globals.SubPanels[name]
-    function Win:CreateButton(title, callback)
-        Library:AddExpandButton(panel, title, nil, function(state)
-            if state and callback then pcall(callback) end
-        end)
+    
+    function Win:CreateActionButton(title, callback, icon)
+        return Library:AddActionButton(panel, title, callback, icon)
     end
+    
+    function Win:CreateInstantButton(title, callback, icon)
+        return Library:AddInstantButton(panel, title, callback, icon)
+    end
+    
+    function Win:CreateTextLabel(text, color, alignment, size)
+        return Library:AddTextLabel(panel, text, color, alignment, size)
+    end
+
     function Win:CreateModule(title, callback)
         local Btn, MoreBtn, Content = Library:AddExpandButton(panel, title, nil, callback)
         return Library:WrapModule(Btn, MoreBtn, Content, title)
-    end
-    function Win:CreateActionButton(title, callback)
-        return Library:AddActionButton(panel, title, callback)
     end
     return Win
 end
@@ -1284,16 +1290,20 @@ function Library:CreateChildWindow(title)
     panel.BackgroundTransparency = 1
     panel.Visible = false
     panel.Parent = self.Globals.RightPanel
+
     local lay = Instance.new("UIListLayout")
     lay.Padding = UDim.new(0, 8)
     lay.FillDirection = Enum.FillDirection.Vertical
     lay.HorizontalAlignment = Enum.HorizontalAlignment.Center
     lay.VerticalAlignment = Enum.VerticalAlignment.Top
     lay.Parent = panel
+
     local panelPad = Instance.new("UIPadding")
     panelPad.PaddingRight = UDim.new(0, 4)
+    panelPad.PaddingLeft = UDim.new(0, 4)
     panelPad.PaddingTop = UDim.new(0, 4)
     panelPad.Parent = panel
+
     self.Globals.SubPanels[title] = panel
 
     local Btn, setActive = self:_CreateLeftButton(title)

@@ -1,7 +1,7 @@
 -- ============================================================
 -- GhostlyPilotUI - YC API Wrapper
 -- Author: 茉莉璐 With Deepseek
--- Version: 2.2.8
+-- Version: 2.3.0
 -- ============================================================
 
 if _G.GhostlyPilotUI_Loaded then
@@ -13,7 +13,7 @@ if _G.GhostlyPilotUI_Loaded then
 end
 
 local Library = {}
-local VERSION = "2.2.8"
+local VERSION = "2.3.0"
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -558,7 +558,16 @@ local function buildBaseUI()
     Icon.AnchorPoint = Vector2.new(0.5, 0.5)
     Icon.BackgroundTransparency = 1
     Icon.ScaleType = Enum.ScaleType.Fit
-    Icon.Image = "rbxassetid://127629592269434"
+
+    local cachedIcon = "pilot_icon.png"
+    local ICON_URL = "https://hk.gh-proxy.org/https://raw.githubusercontent.com/M0Li1u/GhostlyPilot--/refs/heads/main/retouch_2026111200394633.png"
+    pcall(function()
+        if not isfile(cachedIcon) then 
+            writefile(cachedIcon, game:HttpGet(ICON_URL)) 
+        end
+        Icon.Image = getcustomasset(cachedIcon)
+    end)
+
     Icon.Parent = IconWrap
 
     local TitleLabel = Instance.new("TextLabel")
@@ -714,7 +723,7 @@ local function spawnSnow()
             local actualSize = math.random(cfg.sizeMin, cfg.sizeMax)
             snow.Size = UDim2.new(0, actualSize, 0, actualSize)
             snow.BackgroundTransparency = 1
-            snow.Text = "❄️"
+            snow.Text = "●"
             snow.Font = Enum.Font.SourceSansBold
             snow.TextSize = actualSize
             snow.TextTransparency = cfg.alpha + (math.random(-5, 5) / 100)
@@ -1362,7 +1371,7 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon)
     Icon.AnchorPoint = Vector2.new(0, 0.5)
     Icon.BackgroundTransparency = 1
     Icon.ScaleType = Enum.ScaleType.Fit
-    Icon.Image = icon or "rbxassetid://127629592269434"
+    Icon.Image = icon or "rbxassetid://117319089551538"
     Icon.Parent = Header
 
     local TitleLabel = Instance.new("TextLabel")
@@ -1478,6 +1487,17 @@ local function refreshHeight()
             if currentHeight ~= targetHeight then
                 currentHeight = targetHeight
                 TweenService:Create(Row, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(1, 0, 0, targetHeight) }):Play()
+                
+                task.delay(0.3, function()
+                    local p = Row.Parent
+                    while p do
+                        if p:IsA("ScrollingFrame") and p.UIListLayout then
+                            p.CanvasSize = UDim2.new(0, 0, 0, p.UIListLayout.AbsoluteContentSize.Y + 30)
+                            break
+                        end
+                        p = p.Parent
+                    end
+                end)
             end
         end
     end)
@@ -1823,10 +1843,21 @@ function Library:AddDropdown(parent, txt, opts, callback, multiple, cfgKey)
     if multiple then UpdateDisplay() end
 
     Main.MouseButton1Click:Connect(function()
-        open = not open
-        local nh = open and (H + #opts * optH) or H
-        TweenService:Create(Base, TweenInfo.new(0.25), {Size = UDim2.new(1, 0, 0, nh)}):Play()
-    end)
+    open = not open
+    local nh = open and (H + #opts * optH) or H
+    TweenService:Create(Base, TweenInfo.new(0.25), {Size = UDim2.new(1, 0, 0, nh)}):Play()
+    
+    local p = Base.Parent
+    while p do
+        if p.Name == "Content" and Library.Globals._RefreshHeightMap and Library.Globals._RefreshHeightMap[p] then
+            task.delay(0.3, function()
+                Library.Globals._RefreshHeightMap[p]()
+            end)
+            break
+        end
+        p = p.Parent
+    end
+end)
 
     local updateDropdown
     updateDropdown = function(newOpts)
@@ -2224,7 +2255,7 @@ ClickBtn.MouseButton1Click:Connect(function()
 local p = Container.Parent
 while p do
     if p.Name == "Content" and Library.Globals._RefreshHeightMap and Library.Globals._RefreshHeightMap[p] then
-        task.delay(0.3, function()
+        task.delay(0.35, function()
             Library.Globals._RefreshHeightMap[p]()
         end)
         break

@@ -295,7 +295,6 @@ Library.Globals = {
     ActiveNotifs = {}, FloatWidgets = {}, OpenSound    = nil, CloseSound   = nil,
     MainCardOpen = false, Initialized  = false,
     LeftScroll   = nil, LHTimeLabel = nil, MainGradient = nil,
-    GuiRoot      = nil, MainCard     = nil, LeftPanel    = nil, RightPanel   = nil,
 }
 
 local function initSounds()
@@ -723,7 +722,7 @@ local function spawnSnow()
             local actualSize = math.random(cfg.sizeMin, cfg.sizeMax)
             snow.Size = UDim2.new(0, actualSize, 0, actualSize)
             snow.BackgroundTransparency = 1
-            snow.Text = "●"
+            snow.Text = "❄️"
             snow.Font = Enum.Font.SourceSansBold
             snow.TextSize = actualSize
             snow.TextTransparency = cfg.alpha + (math.random(-5, 5) / 100)
@@ -1489,13 +1488,20 @@ local function refreshHeight()
                 TweenService:Create(Row, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(1, 0, 0, targetHeight) }):Play()
                 
                 task.delay(0.3, function()
-                    local p = Row.Parent
-                    while p do
-                        if p:IsA("ScrollingFrame") and p.UIListLayout then
-                            p.CanvasSize = UDim2.new(0, 0, 0, p.UIListLayout.AbsoluteContentSize.Y + 30)
-                            break
+                    local panel = Row.Parent
+                    if panel and panel:IsA("ScrollingFrame") then
+                        local maxY = 0
+                        for _, child in ipairs(panel:GetChildren()) do
+                            if child:IsA("GuiObject") and child.Visible then
+                                local bottomY = child.Position.Y.Offset + child.Size.Y.Offset
+                                if bottomY > maxY then
+                                    maxY = bottomY
+                                end
+                            end
                         end
-                        p = p.Parent
+                        if maxY > 0 then
+                            panel.CanvasSize = UDim2.new(0, 0, 0, maxY + 30)
+                        end
                     end
                 end)
             end
@@ -2680,7 +2686,7 @@ function Library:_BuildBuiltinWindows()
 
     local themeMod = SettingsWin:CreateModule("主题", function() end)
 
-    local themeOrder = {"樱花", "雪天", "薄荷绿", "暗夜黑", "烈焰红"}
+    local themeOrder = {"樱花", "雪天"}
     local themeNames = {}
     for _, name in ipairs(themeOrder) do
         if self.Presets[name] then
@@ -2740,18 +2746,21 @@ function Library:Init()
     end
     self.Globals.Initialized = true
 
-    local savedThemeName = self:_LoadThemeName()
-    if not savedThemeName or not self.Presets[savedThemeName] then
-        savedThemeName = "雪天"
-        self:_SaveThemeName(savedThemeName)
+local savedThemeName = self:_LoadThemeName()
+
+-- 强制只保留樱花和雪天
+if savedThemeName ~= "雪天" and savedThemeName ~= "樱花" then
+    savedThemeName = "樱花" -- 如果是别的主题（比如薄荷绿、暗夜黑等），强制替换为樱花
+    self:_SaveThemeName(savedThemeName) -- 并覆盖写入本地文件
+end
+
+self.CurrentThemeName = savedThemeName
+if self.Presets[savedThemeName] then
+    for k, v in pairs(self.Presets[savedThemeName]) do
+        self.Theme[k] = v
     end
-    self.CurrentThemeName = savedThemeName
-    if self.Presets[savedThemeName] then
-        for k, v in pairs(self.Presets[savedThemeName]) do
-            self.Theme[k] = v
-        end
-        self.COLOR_ON = self.Theme.Accent
-    end
+    self.COLOR_ON = self.Theme.Accent
+end
 
     initSounds()
     buildBaseUI()

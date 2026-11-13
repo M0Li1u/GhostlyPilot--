@@ -1350,11 +1350,6 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon, noSw
     Instance.new("UICorner", Row).CornerRadius = UDim.new(0, 10)
     self:_BindTheme(Row, function() return Library.Theme.CardBg end)
 
-    local RowStroke = Instance.new("UIStroke", Row)
-    RowStroke.Color = self.Theme.Stroke
-    RowStroke.Thickness = 1
-    RowStroke.Transparency = 1
-
     local Header = Instance.new("Frame")
     Header.Name = "Header"
     Header.Size = UDim2.new(1, 0, 0, ROW_H)
@@ -1425,8 +1420,8 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon, noSw
     MoreBtn.Visible = false -- 默认隐藏
     MoreBtn.Parent = Header
     Instance.new("UICorner", MoreBtn).CornerRadius = UDim.new(0, 6)
-
     MoreBtn:SetAttribute("IsOpen", false)
+
     self:_BindTheme(MoreBtn, function()
         if MoreBtn:GetAttribute("IsOpen") then return Library.Theme.Accent else return LighterColor(Library.Theme.CardBg, 0.04) end
     end)
@@ -1469,13 +1464,12 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon, noSw
         return false
     end
 
-    -- 核心逻辑：只有【有控件】且【开关开启/无开关】时才显示 + 号
+    -- 核心逻辑：控制 + 号的显示
     local function updateMoreBtnVisibility()
         if hasRealChild() and (noSwitch or isToggled) then
             MoreBtn.Visible = true
         else
             MoreBtn.Visible = false
-            -- 如果开关关了，强制收起面板，控件就会消失
             if open then
                 open = false
                 MoreBtn:SetAttribute("IsOpen", false)
@@ -1487,6 +1481,7 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon, noSw
         end
     end
 
+    -- 高度刷新
     local function refreshHeight()
         task.spawn(function()
             if not Content.Parent then return end
@@ -1505,10 +1500,15 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon, noSw
     Library.Globals._RefreshHeightMap = Library.Globals._RefreshHeightMap or {}
     Library.Globals._RefreshHeightMap[Content] = refreshHeight
 
+    -- 监听子控件加入
     Content.ChildAdded:Connect(function(child)
         if child:IsA("GuiObject") then
-            task.defer(updateMoreBtnVisibility)
-            task.defer(function() task.wait(0.05); refreshHeight() end)
+            -- 延迟一点确保外层 API 已经执行完（即控件已经创建完毕），再显示 + 号
+            task.defer(function()
+                task.wait(0.05)
+                updateMoreBtnVisibility()
+                refreshHeight()
+            end)
         end
     end)
 
@@ -1517,6 +1517,7 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon, noSw
         layoutObj:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() task.defer(refreshHeight) end)
     end
 
+    -- 开关动画
     local function updateSwitchVisual()
         TweenService:Create(SwitchBtn, TweenInfo.new(0.2), {
             BackgroundColor3 = isToggled and Library.Theme.Accent or Library.Theme.Off
@@ -1530,7 +1531,7 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon, noSw
         isToggled = not isToggled
         SwitchBtn:SetAttribute("IsOn", isToggled)
         updateSwitchVisual()
-        updateMoreBtnVisibility() -- 开关变了，刷新 + 号
+        updateMoreBtnVisibility() -- 开关改变时刷新 + 号
         
         Library:Notify(title, isToggled)
         if isToggled then

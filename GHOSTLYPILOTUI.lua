@@ -573,7 +573,7 @@ local function buildBaseUI()
     TitleLabel.Size = UDim2.new(0, 220, 1, 0)
     TitleLabel.Position = UDim2.new(0, 44, 0, 0)
     TitleLabel.BackgroundTransparency = 1
-    TitleLabel.Text = "GhostlyPilot v2.3.1"
+    TitleLabel.Text = "GhostlyPilot v2.3.0"
     TitleLabel.Font = Enum.Font.Merriweather
     TitleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
     TitleLabel.TextSize = 17
@@ -1068,14 +1068,9 @@ updateHUDLayout()
     RightPanel.BackgroundColor3 = Library.Theme.CardBg
     RightPanel.BackgroundTransparency = 0.4
     RightPanel.BorderSizePixel = 0
-    RightPanel.ScrollBarThickness = 2 -- 给它一个极小的厚度，防止引擎计算出错
-    RightPanel.ScrollBarImageTransparency = 1 -- 将这个极小厚度的滚动条完全隐形
-    RightPanel.TopImage = "" -- 清除顶部边缘可能产生的渲染伪影
-    RightPanel.BottomImage = "" -- 清除底部边缘伪影
-    RightPanel.MidImage = "" -- 清除中间伪影
+    RightPanel.ScrollBarThickness = 0 -- 直接设为 0，手动控制 CanvasSize 就不会有灰条
     RightPanel.ScrollingDirection = Enum.ScrollingDirection.Y
     RightPanel.CanvasSize = UDim2.new(0, 0, 0, 0)
-    RightPanel.AutomaticCanvasSize = Enum.AutomaticSize.Y
     RightPanel.ClipsDescendants = true
     RightPanel.Parent = MainCard
     Instance.new("UICorner", RightPanel).CornerRadius = UDim.new(0, 12)
@@ -1301,7 +1296,6 @@ function Library:CreateChildWindow(title)
     local panel = Instance.new("Frame")
     panel.Name = "Panel_" .. title
     panel.Size = UDim2.new(1, 0, 0, 0)
-    panel.AutomaticSize = Enum.AutomaticSize.Y
     panel.BackgroundTransparency = 1
     panel.Visible = false
     panel.Parent = self.Globals.RightPanel
@@ -1456,7 +1450,6 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon, noSw
     Content.BackgroundTransparency = 1
     Content.Position = UDim2.new(0, 0, 0, ROW_H)
     Content.Size = UDim2.new(1, 0, 0, 0)
-    Content.AutomaticSize = Enum.AutomaticSize.Y
     Content.ClipsDescendants = false
     Content.Visible = false
     Content.Parent = Row

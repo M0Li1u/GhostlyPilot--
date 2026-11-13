@@ -802,7 +802,8 @@ Library.Globals.SetEffect = function(mode)
         Library.Globals.bgImage.Visible = true
         Library.Globals.sakuraGradient.Visible = false
         pcall(function() Library.Globals.bgImage.Image = getcustomasset("church_bg.png") end)
-        spawnSnow()
+        for _, p in ipairs(snowParticles) do if p.Label then p.Label:Destroy() end end
+        snowParticles = {}
     elseif mode == "Sakura" then
         Library.Globals.bgImage.Visible = false
         Library.Globals.sakuraGradient.Visible = true
@@ -820,8 +821,7 @@ elseif Library.CurrentThemeName == "暗黑教堂" then
     Library.Globals.bgImage.Visible = true
     Library.Globals.sakuraGradient.Visible = false
     pcall(function() Library.Globals.bgImage.Image = getcustomasset("church_bg.png") end)
-    spawnSnow()
-    currentEffect = "Snow"
+    currentEffect = "Snow" 
 else
     Library.Globals.bgImage.Visible = false
     Library.Globals.sakuraGradient.Visible = true

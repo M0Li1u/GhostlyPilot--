@@ -1479,7 +1479,8 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon, noSw
     Overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
     Overlay.BackgroundTransparency = 0.5
     Overlay.BorderSizePixel = 0
-    Overlay.Size = UDim2.new(1, 0, 1, 0)
+    Overlay.Size = UDim2.new(1, 0, 0, 0) -- 初始高度0
+    Overlay.AutomaticSize = Enum.AutomaticSize.Y -- 跟随 Content 自动撑开高度
     Overlay.Position = UDim2.new(0, 0, 0, 0)
     Overlay.ZIndex = 999
     Overlay.Active = true

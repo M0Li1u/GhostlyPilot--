@@ -1200,6 +1200,7 @@ local function CreateWindowObj(name)
     function Win:CreateTextLabel(text, color, alignment, size)
         return Library:AddTextLabel(panel, text, color, alignment, size)
     end
+
     return Win
 end
 
@@ -1224,7 +1225,7 @@ function Library:WrapModule(btn, moreBtn, content, title)
         Library:AddColorPicker(content, txt, defaultColor, cb, cfgKey)
     end
     function Mod:CreateTextLabel(txt, color, alignment, size)
-        Library:AddTextLabel(content, txt, color, alignment, size)
+        return Library:AddTextLabel(content, txt, color, alignment, size)
     end
     return Mod
 end
@@ -1397,11 +1398,7 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon, noSw
 
     SwitchBtn:SetAttribute("IsOn", false)
     self:_BindTheme(SwitchBtn, function()
-        if SwitchBtn:GetAttribute("IsOn") then
-            return Library.Theme.Accent
-        else
-            return Library.Theme.Off
-        end
+        if SwitchBtn:GetAttribute("IsOn") then return Library.Theme.Accent else return Library.Theme.Off end
     end)
 
     local Knob = Instance.new("Frame")
@@ -1412,11 +1409,7 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon, noSw
     Knob.Parent = SwitchBtn
     Instance.new("UICorner", Knob).CornerRadius = UDim.new(1, 0)
     self:_BindTheme(Knob, function()
-        if IsDarkTheme() then
-            return Color3.fromRGB(230, 230, 240)
-        else
-            return Color3.fromRGB(255, 255, 255)
-        end
+        if IsDarkTheme() then return Color3.fromRGB(230, 230, 240) else return Color3.fromRGB(255, 255, 255) end
     end)
 
     local MoreBtn = Instance.new("TextButton")
@@ -1429,24 +1422,16 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon, noSw
     MoreBtn.TextColor3 = self.Theme.OffText
     MoreBtn.TextSize = 16
     MoreBtn.AutoButtonColor = false
-    MoreBtn.Visible = false -- 需求3：默认隐藏，检测到有子控件再显示
+    MoreBtn.Visible = false -- 默认隐藏
     MoreBtn.Parent = Header
     Instance.new("UICorner", MoreBtn).CornerRadius = UDim.new(0, 6)
 
     MoreBtn:SetAttribute("IsOpen", false)
     self:_BindTheme(MoreBtn, function()
-        if MoreBtn:GetAttribute("IsOpen") then
-            return Library.Theme.Accent
-        else
-            return LighterColor(Library.Theme.CardBg, 0.04)
-        end
+        if MoreBtn:GetAttribute("IsOpen") then return Library.Theme.Accent else return LighterColor(Library.Theme.CardBg, 0.04) end
     end)
     self:_BindText(MoreBtn, function()
-        if MoreBtn:GetAttribute("IsOpen") then
-            return Color3.fromRGB(255, 255, 255)
-        else
-            return Library.Theme.OffText
-        end
+        if MoreBtn:GetAttribute("IsOpen") then return Color3.fromRGB(255, 255, 255) else return Library.Theme.OffText end
     end)
 
     local Content = Instance.new("Frame")
@@ -1454,7 +1439,7 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon, noSw
     Content.BackgroundTransparency = 1
     Content.Position = UDim2.new(0, 0, 0, ROW_H)
     Content.Size = UDim2.new(1, 0, 0, 0)
-    -- 删掉了 Content.AutomaticSize，高度完全由下面的 refreshHeight 决定
+    Content.AutomaticSize = Enum.AutomaticSize.Y
     Content.ClipsDescendants = false
     Content.Visible = false
     Content.Parent = Row
@@ -1473,92 +1458,65 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon, noSw
     CLayout.SortOrder = Enum.SortOrder.LayoutOrder
     CLayout.Parent = Content
 
-
--- 终极防灰条遮罩
-    local Overlay = Instance.new("Frame")
-    Overlay.Name = "_DisableOverlay"
-    Overlay.BackgroundTransparency = 1 -- 完全透明
-    Overlay.Size = UDim2.new(1, 0, 1, 0) -- 直接填满，不要用 AutomaticSize！
-    Overlay.ZIndex = 999
-    Overlay.Active = true
-    Overlay.Visible = false
-    Overlay.Parent = Content
-
-    local Blocker = Instance.new("TextButton")
-    Blocker.Size = UDim2.new(1, 0, 1, 0)
-    Blocker.BackgroundTransparency = 1
-    Blocker.Text = ""
-    Blocker.ZIndex = 1000
-    Blocker.Active = true
-    Blocker.AutoButtonColor = false
-    Blocker.Parent = Overlay
-
     local open = false
     local currentHeight = ROW_H
+    local isToggled = false
 
-    -- 需求3：检测是否有真实子控件
     local function hasRealChild()
         for _, c in ipairs(Content:GetChildren()) do
-            if c:IsA("GuiObject") and c.Name ~= "_DisableOverlay" then
-                return true
-            end
+            if c:IsA("GuiObject") then return true end
         end
         return false
     end
 
+    -- 核心逻辑：只有【有控件】且【开关开启/无开关】时才显示 + 号
     local function updateMoreBtnVisibility()
-        local has = hasRealChild()
-        MoreBtn.Visible = has
-        if not has and open then
-            open = false
-            MoreBtn:SetAttribute("IsOpen", false)
-            MoreBtn.Text = "+"
-            Content.Visible = false
-            currentHeight = ROW_H
-            TweenService:Create(Row, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, ROW_H)}):Play()
+        if hasRealChild() and (noSwitch or isToggled) then
+            MoreBtn.Visible = true
+        else
+            MoreBtn.Visible = false
+            -- 如果开关关了，强制收起面板，控件就会消失
+            if open then
+                open = false
+                MoreBtn:SetAttribute("IsOpen", false)
+                MoreBtn.Text = "+"
+                Content.Visible = false
+                currentHeight = ROW_H
+                TweenService:Create(Row, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, ROW_H)}):Play()
+            end
         end
     end
 
-local function refreshHeight()
-    task.spawn(function()
-        if not Content.Parent then return end
-        task.wait(0.05)
-        local layout = Content:FindFirstChildOfClass("UIListLayout")
-        if layout then
-            local contentHeight = layout.AbsoluteContentSize.Y + 16
-            local targetHeight = open and (ROW_H + contentHeight) or ROW_H
-            
-            if open then
-                Content.Size = UDim2.new(1, 0, 0, contentHeight)
+    local function refreshHeight()
+        task.spawn(function()
+            if not Content.Parent then return end
+            task.wait(0.05)
+            local layout = Content:FindFirstChildOfClass("UIListLayout")
+            if layout then
+                local targetHeight = open and (ROW_H + layout.AbsoluteContentSize.Y + 28) or ROW_H
+                if currentHeight ~= targetHeight then
+                    currentHeight = targetHeight
+                    TweenService:Create(Row, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(1, 0, 0, targetHeight) }):Play()
+                end
             end
-
-            if currentHeight ~= targetHeight then
-                currentHeight = targetHeight
-                TweenService:Create(Row, TweenInfo.new(0.25), { Size = UDim2.new(1, 0, 0, targetHeight) }):Play()
-            end
-        end
-    end)
-end
+        end)
+    end
 
     Library.Globals._RefreshHeightMap = Library.Globals._RefreshHeightMap or {}
     Library.Globals._RefreshHeightMap[Content] = refreshHeight
 
-    Content:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() task.defer(refreshHeight) end)
-    local layoutObj = Content:FindFirstChildOfClass("UIListLayout")
-    if layoutObj then 
-        layoutObj:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() task.defer(refreshHeight) end) 
-    end
-    
-    Content.ChildAdded:Connect(function(child) 
-        if child:IsA("GuiObject") and child.Name ~= "_DisableOverlay" then
+    Content.ChildAdded:Connect(function(child)
+        if child:IsA("GuiObject") then
             task.defer(updateMoreBtnVisibility)
+            task.defer(function() task.wait(0.05); refreshHeight() end)
         end
-        if child:IsA("GuiObject") then 
-            task.defer(function() task.wait(0.05); refreshHeight() end) 
-        end 
     end)
 
-    local isToggled = false
+    local layoutObj = Content:FindFirstChildOfClass("UIListLayout")
+    if layoutObj then
+        layoutObj:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() task.defer(refreshHeight) end)
+    end
+
     local function updateSwitchVisual()
         TweenService:Create(SwitchBtn, TweenInfo.new(0.2), {
             BackgroundColor3 = isToggled and Library.Theme.Accent or Library.Theme.Off
@@ -1572,7 +1530,8 @@ end
         isToggled = not isToggled
         SwitchBtn:SetAttribute("IsOn", isToggled)
         updateSwitchVisual()
-        Overlay.Visible = not isToggled -- 需求2：开关控制子控件是否灰掉
+        updateMoreBtnVisibility() -- 开关变了，刷新 + 号
+        
         Library:Notify(title, isToggled)
         if isToggled then
             Library:AddStatus(title)
@@ -1595,7 +1554,7 @@ end
     end
 
     MoreBtn.MouseButton1Click:Connect(function()
-        if not hasRealChild() then return end -- 需求3：没控件不允许展开
+        if not hasRealChild() then return end
         open = not open
         MoreBtn:SetAttribute("IsOpen", open)
         MoreBtn.Text = open and "−" or "+"
@@ -1621,9 +1580,6 @@ end
             }):Play()
         end
     end)
-
-    updateMoreBtnVisibility()
-    Overlay.Visible = true -- 默认关闭，所以显示遮罩
 
     return Row, MoreBtn, Content
 end

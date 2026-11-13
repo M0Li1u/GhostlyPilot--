@@ -573,8 +573,8 @@ local function buildBaseUI()
     TitleLabel.Size = UDim2.new(0, 220, 1, 0)
     TitleLabel.Position = UDim2.new(0, 44, 0, 0)
     TitleLabel.BackgroundTransparency = 1
-    TitleLabel.Text = "GhostlyPilot"
-    TitleLabel.Font = Enum.Font.GothamBold
+    TitleLabel.Text = "GhostlyPilot v2.3.0"
+    TitleLabel.Font = Enum.Font.Merriweather
     TitleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
     TitleLabel.TextSize = 17
     TitleLabel.TextXAlignment = Enum.TextXAlignment.Left
@@ -978,9 +978,9 @@ updateHUDLayout()
     LHTitle.Position = UDim2.new(0.5, 0, 0, 68)
     LHTitle.AnchorPoint = Vector2.new(0.5, 0)
     LHTitle.BackgroundTransparency = 1
-    LHTitle.Text = "Ghostly\nPilot"
+    LHTitle.Text = "幻舵\nGhostlyPilot"
     LHTitle.TextWrapped = true
-    LHTitle.Font = Enum.Font.Merriweather
+    LHTitle.Font = Enum.Font.GothamBold
     LHTitle.TextColor3 = Library.Theme.TextDark
     LHTitle.TextSize = 17
     LHTitle.TextXAlignment = Enum.TextXAlignment.Center

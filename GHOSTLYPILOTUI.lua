@@ -1071,6 +1071,7 @@ updateHUDLayout()
     RightPanel.ScrollBarThickness = 0 -- 直接设为 0，手动控制 CanvasSize 就不会有灰条
     RightPanel.ScrollingDirection = Enum.ScrollingDirection.Y
     RightPanel.CanvasSize = UDim2.new(0, 0, 0, 0)
+    RightPanel.AutomaticCanvasSize = Enum.AutomaticSize.Y -- 👈 加上这一行！滚动全靠它！
     RightPanel.ClipsDescendants = true
     RightPanel.Parent = MainCard
     Instance.new("UICorner", RightPanel).CornerRadius = UDim.new(0, 12)
@@ -1296,6 +1297,7 @@ function Library:CreateChildWindow(title)
     local panel = Instance.new("Frame")
     panel.Name = "Panel_" .. title
     panel.Size = UDim2.new(1, 0, 0, 0)
+    panel.AutomaticSize = Enum.AutomaticSize.Y -- 必须有这句
     panel.BackgroundTransparency = 1
     panel.Visible = false
     panel.Parent = self.Globals.RightPanel
@@ -1450,6 +1452,7 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon, noSw
     Content.BackgroundTransparency = 1
     Content.Position = UDim2.new(0, 0, 0, ROW_H)
     Content.Size = UDim2.new(1, 0, 0, 0)
+    Content.AutomaticSize = Enum.AutomaticSize.Y
     Content.ClipsDescendants = false
     Content.Visible = false
     Content.Parent = Row

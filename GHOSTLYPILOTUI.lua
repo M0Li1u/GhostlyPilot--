@@ -1068,8 +1068,11 @@ updateHUDLayout()
     RightPanel.BackgroundColor3 = Library.Theme.CardBg
     RightPanel.BackgroundTransparency = 0.4
     RightPanel.BorderSizePixel = 0
-    RightPanel.ScrollBarThickness = 0   -- 强制隐藏滚动条
-    RightPanel.ScrollBarImageTransparency = 1 -- 确保完全透明
+    RightPanel.ScrollBarThickness = 2 -- 给它一个极小的厚度，防止引擎计算出错
+    RightPanel.ScrollBarImageTransparency = 1 -- 将这个极小厚度的滚动条完全隐形
+    RightPanel.TopImage = "" -- 清除顶部边缘可能产生的渲染伪影
+    RightPanel.BottomImage = "" -- 清除底部边缘伪影
+    RightPanel.MidImage = "" -- 清除中间伪影
     RightPanel.ScrollingDirection = Enum.ScrollingDirection.Y
     RightPanel.CanvasSize = UDim2.new(0, 0, 0, 0)
     RightPanel.AutomaticCanvasSize = Enum.AutomaticSize.Y

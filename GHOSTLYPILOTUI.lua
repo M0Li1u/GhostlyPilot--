@@ -1068,11 +1068,11 @@ updateHUDLayout()
     RightPanel.BackgroundColor3 = Library.Theme.CardBg
     RightPanel.BackgroundTransparency = 0.4
     RightPanel.BorderSizePixel = 0
-    RightPanel.ScrollBarThickness = 0
-    RightPanel.ScrollBarImageColor3 = Library.Theme.Stroke
+    RightPanel.ScrollBarThickness = 0   -- 强制隐藏滚动条
+    RightPanel.ScrollBarImageTransparency = 1 -- 确保完全透明
+    RightPanel.ScrollingDirection = Enum.ScrollingDirection.Y
     RightPanel.CanvasSize = UDim2.new(0, 0, 0, 0)
     RightPanel.AutomaticCanvasSize = Enum.AutomaticSize.Y
-    RightPanel.ScrollingDirection = Enum.ScrollingDirection.Y
     RightPanel.ClipsDescendants = true
     RightPanel.Parent = MainCard
     Instance.new("UICorner", RightPanel).CornerRadius = UDim.new(0, 12)

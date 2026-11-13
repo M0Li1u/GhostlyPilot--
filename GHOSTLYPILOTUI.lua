@@ -1,7 +1,7 @@
 -- ============================================================
 -- GhostlyPilotUI - YC API Wrapper
 -- Author: 茉莉璐 With Deepseek
--- Version: 2.3.0
+-- Version: 2.3.1
 -- ============================================================
 
 if _G.GhostlyPilotUI_Loaded then
@@ -13,7 +13,7 @@ if _G.GhostlyPilotUI_Loaded then
 end
 
 local Library = {}
-local VERSION = "2.3.0"
+local VERSION = "2.3.1"
 
 local Players = game:GetService("Players")
 local LocalPlayer = Players.LocalPlayer
@@ -573,7 +573,7 @@ local function buildBaseUI()
     TitleLabel.Size = UDim2.new(0, 220, 1, 0)
     TitleLabel.Position = UDim2.new(0, 44, 0, 0)
     TitleLabel.BackgroundTransparency = 1
-    TitleLabel.Text = "GhostlyPilot v2.3.0"
+    TitleLabel.Text = "GhostlyPilot v2.3.1"
     TitleLabel.Font = Enum.Font.Merriweather
     TitleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
     TitleLabel.TextSize = 17
@@ -1230,8 +1230,7 @@ function Library:WrapModule(btn, moreBtn, content, title)
         Library:AddColorPicker(content, txt, defaultColor, cb, cfgKey)
     end
     function Mod:CreateTextLabel(txt, color, alignment, size)
-        local Btn, MoreBtn, Content = Library:AddTextLabel(content, txt, color, alignment, size)
-        return Library:WrapModule(Btn, MoreBtn, Content, txt)
+        Library:AddTextLabel(content, txt, color, alignment, size)
     end
     return Mod
 end
@@ -1477,19 +1476,15 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon, noSw
     CLayout.Parent = Content
 
 
+-- 终极防灰条遮罩
     local Overlay = Instance.new("Frame")
     Overlay.Name = "_DisableOverlay"
-    Overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-    Overlay.BackgroundTransparency = 0.5
-    Overlay.BorderSizePixel = 0
-    Overlay.Size = UDim2.new(1, 0, 0, 0) -- 初始高度0
-    Overlay.AutomaticSize = Enum.AutomaticSize.Y -- 跟随 Content 自动撑开高度
-    Overlay.Position = UDim2.new(0, 0, 0, 0)
+    Overlay.BackgroundTransparency = 1 -- 完全透明
+    Overlay.Size = UDim2.new(1, 0, 1, 0) -- 直接填满，不要用 AutomaticSize！
     Overlay.ZIndex = 999
     Overlay.Active = true
     Overlay.Visible = false
     Overlay.Parent = Content
-    Instance.new("UICorner", Overlay).CornerRadius = UDim.new(0, 8)
 
     local Blocker = Instance.new("TextButton")
     Blocker.Size = UDim2.new(1, 0, 1, 0)
@@ -1852,6 +1847,7 @@ function Library:AddDropdown(parent, txt, opts, callback, multiple, cfgKey)
     Opts.Position = UDim2.new(0, 0, 0, H)
     Opts.Size = UDim2.new(1, 0, 0, #opts * optH)
     Opts.BackgroundTransparency = 1
+    Opts.ZIndex = 50
 
     local OList = Instance.new("UIListLayout")
     OList.Parent = Opts
@@ -2414,13 +2410,8 @@ function Library:AddTextLabel(parent, text, color, alignment, size)
     stroke.Thickness = 1
     self:_BindStroke(stroke, function() return Library.Theme.Stroke end)
 
-    local Header = Instance.new("Frame")
-    Header.Size = UDim2.new(1, 0, 0, ROW_H)
-    Header.BackgroundTransparency = 1
-    Header.Parent = Row
-
     local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(1, -50, 1, 0)
+    Label.Size = UDim2.new(1, -20, 1, 0)
     Label.Position = UDim2.new(0, 10, 0, 0)
     Label.BackgroundTransparency = 1
     Label.Text = text
@@ -2428,131 +2419,10 @@ function Library:AddTextLabel(parent, text, color, alignment, size)
     Label.TextColor3 = color or self.Theme.TextGray
     Label.TextSize = size or 14
     Label.TextXAlignment = alignment or Enum.TextXAlignment.Left
-    Label.Parent = Header
+    Label.Parent = Row
     self:_BindText(Label, function() return color or Library.Theme.TextGray end)
 
-    local MoreBtn = Instance.new("TextButton")
-    MoreBtn.Size = UDim2.new(0, 22, 0, 22)
-    MoreBtn.Position = UDim2.new(1, -14, 0.5, 0)
-    MoreBtn.AnchorPoint = Vector2.new(1, 0.5)
-    MoreBtn.BackgroundColor3 = Color3.fromRGB(245, 245, 248)
-    MoreBtn.Text = "+"
-    MoreBtn.Font = Enum.Font.GothamBold
-    MoreBtn.TextColor3 = self.Theme.OffText
-    MoreBtn.TextSize = 16
-    MoreBtn.AutoButtonColor = false
-    MoreBtn.Visible = false
-    MoreBtn.Parent = Header
-    Instance.new("UICorner", MoreBtn).CornerRadius = UDim.new(0, 6)
-    
-    self:_BindTheme(MoreBtn, function()
-        if MoreBtn:GetAttribute("IsOpen") then return Library.Theme.Accent
-        else return LighterColor(Library.Theme.CardBg, 0.04) end
-    end)
-    self:_BindText(MoreBtn, function()
-        if MoreBtn:GetAttribute("IsOpen") then return Color3.fromRGB(255, 255, 255)
-        else return Library.Theme.OffText end
-    end)
-
-    local Content = Instance.new("Frame")
-    Content.Name = "Content"
-    Content.BackgroundTransparency = 1
-    Content.Position = UDim2.new(0, 0, 0, ROW_H)
-    Content.Size = UDim2.new(1, 0, 0, 0)
-    Content.AutomaticSize = Enum.AutomaticSize.Y
-    Content.ClipsDescendants = false
-    Content.Visible = false
-    Content.Parent = Row
-    self:_BindTheme(Content, function() return Library.Theme.CardBg end)
-
-    local CPad = Instance.new("UIPadding")
-    CPad.PaddingTop = UDim.new(0, 8)
-    CPad.PaddingBottom = UDim.new(0, 8)
-    CPad.PaddingLeft = UDim.new(0, 10)
-    CPad.PaddingRight = UDim.new(0, 10)
-    CPad.Parent = Content
-
-    local CLayout = Instance.new("UIListLayout")
-    CLayout.Padding = UDim.new(0, 6)
-    CLayout.Parent = Content
-
-    local open = false
-    local currentHeight = ROW_H
-
-    local function hasRealChild()
-        for _, c in ipairs(Content:GetChildren()) do
-            if c:IsA("GuiObject") then return true end
-        end
-        return false
-    end
-
-    local function updateMoreBtnVisibility()
-        local has = hasRealChild()
-        MoreBtn.Visible = has
-        if not has and open then
-            open = false
-            MoreBtn:SetAttribute("IsOpen", false)
-            MoreBtn.Text = "+"
-            Content.Visible = false
-            currentHeight = ROW_H
-            TweenService:Create(Row, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, ROW_H)}):Play()
-        end
-    end
-
-    local function refreshHeight()
-        task.spawn(function()
-            if not Content.Parent then return end
-            task.wait(0.05)
-            local layout = Content:FindFirstChildOfClass("UIListLayout")
-            if layout then
-                local targetHeight = open and (ROW_H + layout.AbsoluteContentSize.Y + 28) or ROW_H
-                if currentHeight ~= targetHeight then
-                    currentHeight = targetHeight
-                    TweenService:Create(Row, TweenInfo.new(0.25), { Size = UDim2.new(1, 0, 0, targetHeight) }):Play()
-                end
-            end
-        end)
-    end
-
-    Library.Globals._RefreshHeightMap = Library.Globals._RefreshHeightMap or {}
-    Library.Globals._RefreshHeightMap[Content] = refreshHeight
-
-    Content.ChildAdded:Connect(function(child)
-        if child:IsA("GuiObject") then
-            task.defer(updateMoreBtnVisibility)
-            task.defer(function() task.wait(0.05); refreshHeight() end)
-        end
-    end)
-
-    MoreBtn.MouseButton1Click:Connect(function()
-        if not hasRealChild() then return end
-        open = not open
-        MoreBtn:SetAttribute("IsOpen", open)
-        MoreBtn.Text = open and "−" or "+"
-        
-        if open then
-            Content.Visible = true
-            task.wait()
-            refreshHeight()
-            TweenService:Create(MoreBtn, TweenInfo.new(0.2), {
-                BackgroundColor3 = Library.Theme.Accent,
-                TextColor3 = Color3.fromRGB(255, 255, 255)
-            }):Play()
-        else
-            currentHeight = ROW_H
-            TweenService:Create(Row, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, ROW_H)}):Play()
-            task.delay(0.25, function()
-                if not open then Content.Visible = false end
-            end)
-            TweenService:Create(MoreBtn, TweenInfo.new(0.2), {
-                BackgroundColor3 = LighterColor(Library.Theme.CardBg, 0.04),
-                TextColor3 = Library.Theme.OffText
-            }):Play()
-        end
-    end)
-
-    updateMoreBtnVisibility()
-    return Row, MoreBtn, Content
+    return Row
 end
 
 local function playLoader(onFinish)

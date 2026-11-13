@@ -1198,10 +1198,8 @@ local function CreateWindowObj(name)
     end
 
     function Win:CreateTextLabel(text, color, alignment, size)
-        local Btn, MoreBtn, Content = Library:AddTextLabel(panel, text, color, alignment, size)
-        return Library:WrapModule(Btn, MoreBtn, Content, text)
+        return Library:AddTextLabel(panel, text, color, alignment, size)
     end
-
     return Win
 end
 
@@ -1297,7 +1295,6 @@ function Library:CreateChildWindow(title)
     local panel = Instance.new("Frame")
     panel.Name = "Panel_" .. title
     panel.Size = UDim2.new(1, 0, 0, 0)
-    panel.AutomaticSize = Enum.AutomaticSize.Y -- 必须有这句
     panel.BackgroundTransparency = 1
     panel.Visible = false
     panel.Parent = self.Globals.RightPanel
@@ -1314,6 +1311,11 @@ function Library:CreateChildWindow(title)
     panelPad.PaddingLeft = UDim.new(0, 6)
     panelPad.PaddingTop = UDim.new(0, 6)
     panelPad.Parent = panel
+
+    -- 核心：用排版的高度来撑开面板，丢弃 AutomaticSize
+    lay:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function()
+        panel.Size = UDim2.new(1, 0, 0, lay.AbsoluteContentSize.Y + 12)
+    end)
 
     self.Globals.SubPanels[title] = panel
 
@@ -1452,7 +1454,7 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon, noSw
     Content.BackgroundTransparency = 1
     Content.Position = UDim2.new(0, 0, 0, ROW_H)
     Content.Size = UDim2.new(1, 0, 0, 0)
-    Content.AutomaticSize = Enum.AutomaticSize.Y
+    -- 删掉了 Content.AutomaticSize，高度完全由下面的 refreshHeight 决定
     Content.ClipsDescendants = false
     Content.Visible = false
     Content.Parent = Row
@@ -1523,29 +1525,16 @@ local function refreshHeight()
         task.wait(0.05)
         local layout = Content:FindFirstChildOfClass("UIListLayout")
         if layout then
-            local targetHeight = open and (ROW_H + layout.AbsoluteContentSize.Y + 28) or ROW_H
+            local contentHeight = layout.AbsoluteContentSize.Y + 16
+            local targetHeight = open and (ROW_H + contentHeight) or ROW_H
+            
+            if open then
+                Content.Size = UDim2.new(1, 0, 0, contentHeight)
+            end
+
             if currentHeight ~= targetHeight then
                 currentHeight = targetHeight
                 TweenService:Create(Row, TweenInfo.new(0.25), { Size = UDim2.new(1, 0, 0, targetHeight) }):Play()
-                
-                -- 补上滚动面板高度刷新
-                task.delay(0.3, function()
-                    local panel = Row.Parent
-                    if panel and panel:IsA("ScrollingFrame") then
-                        local maxY = 0
-                        for _, child in ipairs(panel:GetChildren()) do
-                            if child:IsA("GuiObject") and child.Visible then
-                                local bottomY = child.Position.Y.Offset + child.Size.Y.Offset
-                                if bottomY > maxY then
-                                    maxY = bottomY
-                                end
-                            end
-                        end
-                        if maxY > 0 then
-                            panel.CanvasSize = UDim2.new(0, 0, 0, maxY + 30)
-                        end
-                    end
-                end)
             end
         end
     end)

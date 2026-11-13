@@ -32,16 +32,16 @@ local parentGui = (gethui and gethui()) or CoreGui
 -- ============================================================
 Library.Presets = {
     ["樱花"] = {
-    Accent   = Color3.fromRGB(255, 120, 220),
-    Active   = Color3.fromRGB(255, 150, 200),
-    Slider   = Color3.fromRGB(255, 120, 180),
-    CardBg   = Color3.fromRGB(255, 240, 245),
-    PanelBg  = Color3.fromRGB(255, 245, 248),
-    Stroke   = Color3.fromRGB(255, 200, 220),
-    TextDark = Color3.fromRGB(100, 50, 70),
-    TextGray = Color3.fromRGB(180, 130, 150),
-    Off      = Color3.fromRGB(240, 210, 220),
-    OffText  = Color3.fromRGB(150, 100, 120),
+        Accent   = Color3.fromRGB(255, 120, 220),
+        Active   = Color3.fromRGB(255, 150, 200),
+        Slider   = Color3.fromRGB(255, 120, 180),
+        CardBg   = Color3.fromRGB(255, 240, 245),
+        PanelBg  = Color3.fromRGB(255, 245, 248),
+        Stroke   = Color3.fromRGB(255, 200, 220),
+        TextDark = Color3.fromRGB(100, 50, 70),
+        TextGray = Color3.fromRGB(180, 130, 150),
+        Off      = Color3.fromRGB(240, 210, 220),
+        OffText  = Color3.fromRGB(150, 100, 120),
     },
     ["雪天"] = {
         Accent   = Color3.fromRGB(80, 180, 255),
@@ -55,44 +55,19 @@ Library.Presets = {
         Off      = Color3.fromRGB(190, 210, 230),
         OffText  = Color3.fromRGB(80, 110, 150),
     },
-    ["薄荷绿"] = {
-        Accent   = Color3.fromRGB(80, 220, 160),
-        Active   = Color3.fromRGB(60, 200, 180),
-        Slider   = Color3.fromRGB(50, 180, 140),
-        CardBg   = Color3.fromRGB(248, 255, 252),
-        PanelBg  = Color3.fromRGB(240, 255, 248),
-        Stroke   = Color3.fromRGB(210, 240, 225),
-        TextDark = Color3.fromRGB(30, 70, 55),
-        TextGray = Color3.fromRGB(90, 140, 120),
-        Off      = Color3.fromRGB(200, 230, 215),
-        OffText  = Color3.fromRGB(80, 120, 105),
-    },
-    ["暗夜黑"] = {
-        Accent   = Color3.fromRGB(180, 180, 200),
-        Active   = Color3.fromRGB(100, 130, 200),
-        Slider   = Color3.fromRGB(120, 150, 220),
-        CardBg   = Color3.fromRGB(40, 42, 50),
-        PanelBg  = Color3.fromRGB(32, 34, 42),
-        Stroke   = Color3.fromRGB(70, 72, 85),
-        TextDark = Color3.fromRGB(230, 230, 240),
-        TextGray = Color3.fromRGB(150, 150, 165),
-        Off      = Color3.fromRGB(80, 82, 95),
-        OffText  = Color3.fromRGB(180, 180, 195),
-    },
-    ["烈焰红"] = {
-        Accent   = Color3.fromRGB(255, 90, 90),
-        Active   = Color3.fromRGB(255, 130, 80),
-        Slider   = Color3.fromRGB(230, 70, 70),
-        CardBg   = Color3.fromRGB(255, 250, 250),
-        PanelBg  = Color3.fromRGB(255, 245, 245),
-        Stroke   = Color3.fromRGB(245, 220, 220),
-        TextDark = Color3.fromRGB(60, 25, 25),
-        TextGray = Color3.fromRGB(150, 100, 100),
-        Off      = Color3.fromRGB(230, 200, 200),
-        OffText  = Color3.fromRGB(140, 90, 90),
+    ["暗黑教堂"] = {
+        Accent   = Color3.fromRGB(180, 180, 180),
+        Active   = Color3.fromRGB(220, 220, 220),
+        Slider   = Color3.fromRGB(150, 150, 150),
+        CardBg   = Color3.fromRGB(20, 20, 20),
+        PanelBg  = Color3.fromRGB(30, 30, 30),
+        Stroke   = Color3.fromRGB(60, 60, 60),
+        TextDark = Color3.fromRGB(240, 240, 240),
+        TextGray = Color3.fromRGB(150, 150, 150),
+        Off      = Color3.fromRGB(50, 50, 50),
+        OffText  = Color3.fromRGB(180, 180, 180),
     },
 }
-
 -- ============================================================
 -- 当前主题
 -- ============================================================
@@ -197,9 +172,11 @@ function Library:ApplyTheme(name)
     end
     self.COLOR_ON = self.Theme.Accent
     
-    if self.Globals.SetEffect then
+        if self.Globals.SetEffect then
         if name == "雪天" then
-            self.Globals.SetEffect("Snow")
+        self.Globals.SetEffect("Snow")
+        elseif name == "暗黑教堂" then
+            self.Globals.SetEffect("Church")
         else
             self.Globals.SetEffect("Sakura")
         end
@@ -663,7 +640,23 @@ pcall(function()
     end
     bgImage.Image = getcustomasset(cachedImage)
 end)
-Library.Globals.bgImage = bgImage -- 修复了报错，放在定义之后
+Library.Globals.bgImage = bgImage
+
+local bgFilter = Instance.new("Frame")
+bgFilter.Size = UDim2.new(1, 0, 1, 0)
+bgFilter.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+bgFilter.BackgroundTransparency = 0.6
+bgFilter.ZIndex = 1
+bgFilter.Parent = bgImage
+Instance.new("UICorner", bgFilter).CornerRadius = UDim.new(0, 16)
+
+pcall(function()
+    local cachedChurch = "church_bg.png"
+    local CHURCH_URL = "https://hk.gh-proxy.org/https://raw.githubusercontent.com/M0Li1u/GhostlyPilot--/refs/heads/main/1794585967941.png"
+    if not isfile(cachedChurch) then
+        writefile(cachedChurch, game:HttpGet(CHURCH_URL))
+    end
+end)
 
 -- ==========================================
 -- 3. 樱花粉色渐变背景
@@ -796,7 +789,6 @@ local function spawnSakura()
     end
 end
 
--- 供外部切换主题调用的方法
 Library.Globals.SetEffect = function(mode)
     if currentEffect == mode then return end
     currentEffect = mode
@@ -804,6 +796,12 @@ Library.Globals.SetEffect = function(mode)
     if mode == "Snow" then
         Library.Globals.bgImage.Visible = true
         Library.Globals.sakuraGradient.Visible = false
+        pcall(function() Library.Globals.bgImage.Image = getcustomasset("snow_bg.png") end)
+        spawnSnow()
+    elseif mode == "Church" then
+        Library.Globals.bgImage.Visible = true
+        Library.Globals.sakuraGradient.Visible = false
+        pcall(function() Library.Globals.bgImage.Image = getcustomasset("church_bg.png") end)
         spawnSnow()
     elseif mode == "Sakura" then
         Library.Globals.bgImage.Visible = false
@@ -815,6 +813,13 @@ end
 if Library.CurrentThemeName == "雪天" then
     Library.Globals.bgImage.Visible = true
     Library.Globals.sakuraGradient.Visible = false
+    pcall(function() Library.Globals.bgImage.Image = getcustomasset("snow_bg.png") end)
+    spawnSnow()
+    currentEffect = "Snow"
+elseif Library.CurrentThemeName == "暗黑教堂" then
+    Library.Globals.bgImage.Visible = true
+    Library.Globals.sakuraGradient.Visible = false
+    pcall(function() Library.Globals.bgImage.Image = getcustomasset("church_bg.png") end)
     spawnSnow()
     currentEffect = "Snow"
 else
@@ -969,7 +974,9 @@ updateHUDLayout()
     LHIcon.AnchorPoint = Vector2.new(0.5, 0)
     LHIcon.BackgroundTransparency = 1
     LHIcon.ScaleType = Enum.ScaleType.Fit
-    LHIcon.Image = "rbxassetid://117319089551538"
+    pcall(function()
+    LHIcon.Image = getcustomasset("pilot_icon.png")
+    end)
     LHIcon.ZIndex = 3
     LHIcon.Parent = LeftHeader
 
@@ -2284,7 +2291,7 @@ function Library:AddActionButton(parent, title, callback, icon)
     Icon.AnchorPoint = Vector2.new(0, 0.5)
     Icon.BackgroundTransparency = 1
     Icon.ScaleType = Enum.ScaleType.Fit
-    Icon.Image = icon or "rbxassetid://127629592269434"
+    Icon.Image = icon or "rbxassetid://117319089551538"
     Icon.Parent = Btn
 
     local Label = Instance.new("TextLabel")

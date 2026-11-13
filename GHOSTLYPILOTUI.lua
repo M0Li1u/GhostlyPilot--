@@ -573,7 +573,7 @@ local function buildBaseUI()
     TitleLabel.Size = UDim2.new(0, 220, 1, 0)
     TitleLabel.Position = UDim2.new(0, 44, 0, 0)
     TitleLabel.BackgroundTransparency = 1
-    TitleLabel.Text = "GhostlyPilot v2.3.0"
+    TitleLabel.Text = "GhostlyPilot v2.3.1"
     TitleLabel.Font = Enum.Font.Merriweather
     TitleLabel.TextColor3 = Color3.fromRGB(0, 0, 0)
     TitleLabel.TextSize = 17

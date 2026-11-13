@@ -1193,18 +1193,16 @@ local function CreateWindowObj(name)
         return Library:AddActionButton(panel, title, callback, icon)
     end
     
-    function Win:CreateInstantButton(title, callback, icon)
-        return Library:AddInstantButton(panel, title, callback, icon)
-    end
-    
-    function Win:CreateTextLabel(text, color, alignment, size)
-        return Library:AddTextLabel(panel, text, color, alignment, size)
-    end
-
-    function Win:CreateModule(title, callback)
-        local Btn, MoreBtn, Content = Library:AddExpandButton(panel, title, nil, callback)
+    function Win:CreateModule(title, callback, noSwitch)
+        local Btn, MoreBtn, Content = Library:AddExpandButton(panel, title, nil, callback, nil, noSwitch)
         return Library:WrapModule(Btn, MoreBtn, Content, title)
     end
+
+    function Win:CreateTextLabel(text, color, alignment, size)
+        local Btn, MoreBtn, Content = Library:AddTextLabel(panel, text, color, alignment, size)
+        return Library:WrapModule(Btn, MoreBtn, Content, text)
+    end
+
     return Win
 end
 
@@ -1229,10 +1227,8 @@ function Library:WrapModule(btn, moreBtn, content, title)
         Library:AddColorPicker(content, txt, defaultColor, cb, cfgKey)
     end
     function Mod:CreateTextLabel(txt, color, alignment, size)
-        Library:AddTextLabel(content, txt, color, alignment, size)
-    end
-    function Mod:CreateInstantButton(txt, cb, icon)
-        Library:AddInstantButton(content, txt, cb, icon)
+        local Btn, MoreBtn, Content = Library:AddTextLabel(content, txt, color, alignment, size)
+        return Library:WrapModule(Btn, MoreBtn, Content, txt)
     end
     return Mod
 end
@@ -1339,7 +1335,7 @@ end
 -- ============================================================
 -- 可展开功能按钮
 -- ============================================================
-function Library:AddExpandButton(parent, title, statusName, onToggle, icon)
+function Library:AddExpandButton(parent, title, statusName, onToggle, icon, noSwitch)
     local ROW_H = 40
     local PAD = 8
 
@@ -1394,6 +1390,10 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon)
     SwitchBtn.AutoButtonColor = false
     SwitchBtn.Parent = Header
     Instance.new("UICorner", SwitchBtn).CornerRadius = UDim.new(1, 0)
+    
+    if noSwitch then
+        SwitchBtn.Visible = false
+    end
 
     SwitchBtn:SetAttribute("IsOn", false)
     self:_BindTheme(SwitchBtn, function()
@@ -1429,6 +1429,7 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon)
     MoreBtn.TextColor3 = self.Theme.OffText
     MoreBtn.TextSize = 16
     MoreBtn.AutoButtonColor = false
+    MoreBtn.Visible = false -- 需求3：默认隐藏，检测到有子控件再显示
     MoreBtn.Parent = Header
     Instance.new("UICorner", MoreBtn).CornerRadius = UDim.new(0, 6)
 
@@ -1472,21 +1473,67 @@ function Library:AddExpandButton(parent, title, statusName, onToggle, icon)
     CLayout.SortOrder = Enum.SortOrder.LayoutOrder
     CLayout.Parent = Content
 
-local open = false
-local currentHeight = ROW_H
+
+    local Overlay = Instance.new("Frame")
+    Overlay.Name = "_DisableOverlay"
+    Overlay.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+    Overlay.BackgroundTransparency = 0.5
+    Overlay.BorderSizePixel = 0
+    Overlay.Size = UDim2.new(1, 0, 1, 0)
+    Overlay.Position = UDim2.new(0, 0, 0, 0)
+    Overlay.ZIndex = 999
+    Overlay.Active = true
+    Overlay.Visible = false
+    Overlay.Parent = Content
+    Instance.new("UICorner", Overlay).CornerRadius = UDim.new(0, 8)
+
+    local Blocker = Instance.new("TextButton")
+    Blocker.Size = UDim2.new(1, 0, 1, 0)
+    Blocker.BackgroundTransparency = 1
+    Blocker.Text = ""
+    Blocker.ZIndex = 1000
+    Blocker.Active = true
+    Blocker.AutoButtonColor = false
+    Blocker.Parent = Overlay
+
+    local open = false
+    local currentHeight = ROW_H
+
+    -- 需求3：检测是否有真实子控件
+    local function hasRealChild()
+        for _, c in ipairs(Content:GetChildren()) do
+            if c:IsA("GuiObject") and c.Name ~= "_DisableOverlay" then
+                return true
+            end
+        end
+        return false
+    end
+
+    local function updateMoreBtnVisibility()
+        local has = hasRealChild()
+        MoreBtn.Visible = has
+        if not has and open then
+            open = false
+            MoreBtn:SetAttribute("IsOpen", false)
+            MoreBtn.Text = "+"
+            Content.Visible = false
+            currentHeight = ROW_H
+            TweenService:Create(Row, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, ROW_H)}):Play()
+        end
+    end
 
 local function refreshHeight()
     task.spawn(function()
         if not Content.Parent then return end
         task.wait(0.05)
-
         local layout = Content:FindFirstChildOfClass("UIListLayout")
         if layout then
             local targetHeight = open and (ROW_H + layout.AbsoluteContentSize.Y + 28) or ROW_H
             if currentHeight ~= targetHeight then
                 currentHeight = targetHeight
-                TweenService:Create(Row, TweenInfo.new(0.25, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), { Size = UDim2.new(1, 0, 0, targetHeight) }):Play()
+                TweenService:Create(Row, TweenInfo.new(0.25), { Size = UDim2.new(1, 0, 0, targetHeight) }):Play()
                 
+                -- 补上滚动面板高度刷新
                 task.delay(0.3, function()
                     local panel = Row.Parent
                     if panel and panel:IsA("ScrollingFrame") then
@@ -1508,79 +1555,91 @@ local function refreshHeight()
         end
     end)
 end
-Library.Globals._RefreshHeightMap = Library.Globals._RefreshHeightMap or {}
-Library.Globals._RefreshHeightMap[Content] = refreshHeight
 
-Content:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() task.defer(refreshHeight) end)
-local layoutObj = Content:FindFirstChildOfClass("UIListLayout")
-if layoutObj then 
-    layoutObj:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() task.defer(refreshHeight) end) 
-end
-Content.ChildAdded:Connect(function(child) 
-    if child:IsA("GuiObject") then 
-        task.defer(function() task.wait(0.05); refreshHeight() end) 
-    end 
-end)
+    Library.Globals._RefreshHeightMap = Library.Globals._RefreshHeightMap or {}
+    Library.Globals._RefreshHeightMap[Content] = refreshHeight
 
-local isToggled = false
-local function updateSwitchVisual()
-    TweenService:Create(SwitchBtn, TweenInfo.new(0.2), {
-        BackgroundColor3 = isToggled and Library.Theme.Accent or Library.Theme.Off
-    }):Play()
-    TweenService:Create(Knob, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
-        Position = isToggled and UDim2.new(1, -14, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
-    }):Play()
-end
-
-local function toggle()
-    isToggled = not isToggled
-    SwitchBtn:SetAttribute("IsOn", isToggled)
-    updateSwitchVisual()
-    Library:Notify(title, isToggled)
-    if isToggled then
-        Library:AddStatus(title)
-    else
-        Library:RemoveStatus(title)
+    Content:GetPropertyChangedSignal("AbsoluteSize"):Connect(function() task.defer(refreshHeight) end)
+    local layoutObj = Content:FindFirstChildOfClass("UIListLayout")
+    if layoutObj then 
+        layoutObj:GetPropertyChangedSignal("AbsoluteContentSize"):Connect(function() task.defer(refreshHeight) end) 
     end
-    if onToggle then pcall(onToggle, isToggled) end
-end
-
-SwitchBtn.MouseButton1Click:Connect(toggle)
-
-local titleClick = Instance.new("TextButton")
-titleClick.Size = UDim2.new(1, -130, 1, 0)
-titleClick.Position = UDim2.new(0, 40, 0, 0)
-titleClick.BackgroundTransparency = 1
-titleClick.Text = ""
-titleClick.Parent = Header
-titleClick.MouseButton1Click:Connect(toggle)
-
-MoreBtn.MouseButton1Click:Connect(function()
-    open = not open
-    MoreBtn:SetAttribute("IsOpen", open)
-    MoreBtn.Text = open and "−" or "+"
     
-    if open then
-        Content.Visible = true
-        currentHeight = ROW_H
-        task.wait()
-        refreshHeight()
-        TweenService:Create(MoreBtn, TweenInfo.new(0.2), {
-            BackgroundColor3 = Library.Theme.Accent,
-            TextColor3 = Color3.fromRGB(255, 255, 255)
+    Content.ChildAdded:Connect(function(child) 
+        if child:IsA("GuiObject") and child.Name ~= "_DisableOverlay" then
+            task.defer(updateMoreBtnVisibility)
+        end
+        if child:IsA("GuiObject") then 
+            task.defer(function() task.wait(0.05); refreshHeight() end) 
+        end 
+    end)
+
+    local isToggled = false
+    local function updateSwitchVisual()
+        TweenService:Create(SwitchBtn, TweenInfo.new(0.2), {
+            BackgroundColor3 = isToggled and Library.Theme.Accent or Library.Theme.Off
         }):Play()
-    else
-        currentHeight = ROW_H
-        TweenService:Create(Row, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, ROW_H)}):Play()
-        task.delay(0.25, function()
-            if not open then Content.Visible = false end
-        end)
-        TweenService:Create(MoreBtn, TweenInfo.new(0.2), {
-            BackgroundColor3 = LighterColor(Library.Theme.CardBg, 0.04),
-            TextColor3 = Library.Theme.OffText
+        TweenService:Create(Knob, TweenInfo.new(0.2, Enum.EasingStyle.Quad), {
+            Position = isToggled and UDim2.new(1, -14, 0.5, 0) or UDim2.new(0, 2, 0.5, 0)
         }):Play()
     end
-end)
+
+    local function toggle()
+        isToggled = not isToggled
+        SwitchBtn:SetAttribute("IsOn", isToggled)
+        updateSwitchVisual()
+        Overlay.Visible = not isToggled -- 需求2：开关控制子控件是否灰掉
+        Library:Notify(title, isToggled)
+        if isToggled then
+            Library:AddStatus(title)
+        else
+            Library:RemoveStatus(title)
+        end
+        if onToggle then pcall(onToggle, isToggled) end
+    end
+
+    SwitchBtn.MouseButton1Click:Connect(toggle)
+
+    local titleClick = Instance.new("TextButton")
+    titleClick.Size = UDim2.new(1, -130, 1, 0)
+    titleClick.Position = UDim2.new(0, 40, 0, 0)
+    titleClick.BackgroundTransparency = 1
+    titleClick.Text = ""
+    titleClick.Parent = Header
+    if not noSwitch then
+        titleClick.MouseButton1Click:Connect(toggle)
+    end
+
+    MoreBtn.MouseButton1Click:Connect(function()
+        if not hasRealChild() then return end -- 需求3：没控件不允许展开
+        open = not open
+        MoreBtn:SetAttribute("IsOpen", open)
+        MoreBtn.Text = open and "−" or "+"
+        
+        if open then
+            Content.Visible = true
+            currentHeight = ROW_H
+            task.wait()
+            refreshHeight()
+            TweenService:Create(MoreBtn, TweenInfo.new(0.2), {
+                BackgroundColor3 = Library.Theme.Accent,
+                TextColor3 = Color3.fromRGB(255, 255, 255)
+            }):Play()
+        else
+            currentHeight = ROW_H
+            TweenService:Create(Row, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, ROW_H)}):Play()
+            task.delay(0.25, function()
+                if not open then Content.Visible = false end
+            end)
+            TweenService:Create(MoreBtn, TweenInfo.new(0.2), {
+                BackgroundColor3 = LighterColor(Library.Theme.CardBg, 0.04),
+                TextColor3 = Library.Theme.OffText
+            }):Play()
+        end
+    end)
+
+    updateMoreBtnVisibility()
+    Overlay.Visible = true -- 默认关闭，所以显示遮罩
 
     return Row, MoreBtn, Content
 end
@@ -2334,23 +2393,30 @@ function Library:AddActionButton(parent, title, callback, icon)
 end
 
 function Library:AddTextLabel(parent, text, color, alignment, size)
-    local Btn = Instance.new("TextButton")
-    Btn.Size = UDim2.new(1, 0, 0, 36)
-    Btn.BackgroundColor3 = self.Theme.CardBg
-    Btn.BackgroundTransparency = 0
-    Btn.Text = ""
-    Btn.AutoButtonColor = false
-    Btn.Parent = parent
-    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 8)
-    self:_BindTheme(Btn, function() return Library.Theme.CardBg end)
+    local ROW_H = 36
+    
+    local Row = Instance.new("Frame")
+    Row.Name = text
+    Row.BackgroundColor3 = self.Theme.CardBg
+    Row.BackgroundTransparency = 0
+    Row.Size = UDim2.new(1, 0, 0, ROW_H)
+    Row.ClipsDescendants = true
+    Row.Parent = parent
+    Instance.new("UICorner", Row).CornerRadius = UDim.new(0, 8)
+    self:_BindTheme(Row, function() return Library.Theme.CardBg end)
 
-    local stroke = Instance.new("UIStroke", Btn)
+    local stroke = Instance.new("UIStroke", Row)
     stroke.Color = self.Theme.Stroke
     stroke.Thickness = 1
     self:_BindStroke(stroke, function() return Library.Theme.Stroke end)
 
+    local Header = Instance.new("Frame")
+    Header.Size = UDim2.new(1, 0, 0, ROW_H)
+    Header.BackgroundTransparency = 1
+    Header.Parent = Row
+
     local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(1, -20, 1, 0)
+    Label.Size = UDim2.new(1, -50, 1, 0)
     Label.Position = UDim2.new(0, 10, 0, 0)
     Label.BackgroundTransparency = 1
     Label.Text = text
@@ -2358,84 +2424,131 @@ function Library:AddTextLabel(parent, text, color, alignment, size)
     Label.TextColor3 = color or self.Theme.TextGray
     Label.TextSize = size or 14
     Label.TextXAlignment = alignment or Enum.TextXAlignment.Left
-    Label.Parent = Btn
+    Label.Parent = Header
     self:_BindText(Label, function() return color or Library.Theme.TextGray end)
 
-    return Btn
-end
-
-function Library:AddInstantButton(parent, text, callback, icon)
-    local Btn = Instance.new("TextButton")
-    Btn.Size = UDim2.new(1, 0, 0, 36)
-    Btn.BackgroundColor3 = self.Theme.CardBg
-    Btn.BackgroundTransparency = 0
-    Btn.Text = ""
-    Btn.AutoButtonColor = false
-    Btn.ClipsDescendants = true
-    Btn.Parent = parent
-    Instance.new("UICorner", Btn).CornerRadius = UDim.new(0, 8)
-    self:_BindTheme(Btn, function() return Library.Theme.CardBg end)
-
-    local stroke = Instance.new("UIStroke", Btn)
-    stroke.Color = self.Theme.Stroke
-    stroke.Thickness = 1
-    self:_BindStroke(stroke, function() return Library.Theme.Stroke end)
-
-    local IconLabel = Instance.new("ImageLabel")
-    IconLabel.Size = UDim2.new(0, 20, 0, 20)
-    IconLabel.Position = UDim2.new(0, 10, 0.5, 0)
-    IconLabel.AnchorPoint = Vector2.new(0, 0.5)
-    IconLabel.BackgroundTransparency = 1
-    IconLabel.ScaleType = Enum.ScaleType.Fit
-    IconLabel.Image = icon or "rbxassetid://127629592269434"
-    IconLabel.Parent = Btn
-
-    local Label = Instance.new("TextLabel")
-    Label.Size = UDim2.new(1, -45, 1, 0)
-    Label.Position = UDim2.new(0, 38, 0, 0)
-    Label.BackgroundTransparency = 1
-    Label.Text = text
-    Label.Font = Enum.Font.GothamBold
-    Label.TextColor3 = self.Theme.TextDark
-    Label.TextSize = 14
-    Label.TextXAlignment = Enum.TextXAlignment.Left
-    Label.Parent = Btn
-    self:_BindText(Label, function() return Library.Theme.TextDark end)
-
-    local Flash = Instance.new("Frame")
-    Flash.Size = UDim2.new(0, 0, 0, 0)
-    Flash.AnchorPoint = Vector2.new(0.5, 0.5)
-    Flash.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-    Flash.BackgroundTransparency = 0.5
-    Flash.ZIndex = 5
-    Flash.Parent = Btn
-    Instance.new("UICorner", Flash).CornerRadius = UDim.new(1, 0)
-
-    Btn.MouseButton1Click:Connect(function()
-        Flash.Position = UDim2.new(0.5, 0, 0.5, 0)
-        Flash.Size = UDim2.new(0, 0, 0, 0)
-        
-        local sizeTw = TweenService:Create(Flash, TweenInfo.new(0.4, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
-            Size = UDim2.new(3, 0, 3, 0),
-            BackgroundTransparency = 1
-        })
-        sizeTw:Play()
-
-        Btn.BackgroundColor3 = self.Theme.Accent
-        Label.TextColor3 = Color3.fromRGB(255, 255, 255)
-        
-        if callback then pcall(callback) end
-
-        task.wait(0.1)
-        TweenService:Create(Btn, TweenInfo.new(0.25), {
-            BackgroundColor3 = self.Theme.CardBg
-        }):Play()
-        TweenService:Create(Label, TweenInfo.new(0.25), {
-            TextColor3 = self.Theme.TextDark
-        }):Play()
+    local MoreBtn = Instance.new("TextButton")
+    MoreBtn.Size = UDim2.new(0, 22, 0, 22)
+    MoreBtn.Position = UDim2.new(1, -14, 0.5, 0)
+    MoreBtn.AnchorPoint = Vector2.new(1, 0.5)
+    MoreBtn.BackgroundColor3 = Color3.fromRGB(245, 245, 248)
+    MoreBtn.Text = "+"
+    MoreBtn.Font = Enum.Font.GothamBold
+    MoreBtn.TextColor3 = self.Theme.OffText
+    MoreBtn.TextSize = 16
+    MoreBtn.AutoButtonColor = false
+    MoreBtn.Visible = false
+    MoreBtn.Parent = Header
+    Instance.new("UICorner", MoreBtn).CornerRadius = UDim.new(0, 6)
+    
+    self:_BindTheme(MoreBtn, function()
+        if MoreBtn:GetAttribute("IsOpen") then return Library.Theme.Accent
+        else return LighterColor(Library.Theme.CardBg, 0.04) end
+    end)
+    self:_BindText(MoreBtn, function()
+        if MoreBtn:GetAttribute("IsOpen") then return Color3.fromRGB(255, 255, 255)
+        else return Library.Theme.OffText end
     end)
 
-    return Btn
+    local Content = Instance.new("Frame")
+    Content.Name = "Content"
+    Content.BackgroundTransparency = 1
+    Content.Position = UDim2.new(0, 0, 0, ROW_H)
+    Content.Size = UDim2.new(1, 0, 0, 0)
+    Content.AutomaticSize = Enum.AutomaticSize.Y
+    Content.ClipsDescendants = false
+    Content.Visible = false
+    Content.Parent = Row
+    self:_BindTheme(Content, function() return Library.Theme.CardBg end)
+
+    local CPad = Instance.new("UIPadding")
+    CPad.PaddingTop = UDim.new(0, 8)
+    CPad.PaddingBottom = UDim.new(0, 8)
+    CPad.PaddingLeft = UDim.new(0, 10)
+    CPad.PaddingRight = UDim.new(0, 10)
+    CPad.Parent = Content
+
+    local CLayout = Instance.new("UIListLayout")
+    CLayout.Padding = UDim.new(0, 6)
+    CLayout.Parent = Content
+
+    local open = false
+    local currentHeight = ROW_H
+
+    local function hasRealChild()
+        for _, c in ipairs(Content:GetChildren()) do
+            if c:IsA("GuiObject") then return true end
+        end
+        return false
+    end
+
+    local function updateMoreBtnVisibility()
+        local has = hasRealChild()
+        MoreBtn.Visible = has
+        if not has and open then
+            open = false
+            MoreBtn:SetAttribute("IsOpen", false)
+            MoreBtn.Text = "+"
+            Content.Visible = false
+            currentHeight = ROW_H
+            TweenService:Create(Row, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, ROW_H)}):Play()
+        end
+    end
+
+    local function refreshHeight()
+        task.spawn(function()
+            if not Content.Parent then return end
+            task.wait(0.05)
+            local layout = Content:FindFirstChildOfClass("UIListLayout")
+            if layout then
+                local targetHeight = open and (ROW_H + layout.AbsoluteContentSize.Y + 28) or ROW_H
+                if currentHeight ~= targetHeight then
+                    currentHeight = targetHeight
+                    TweenService:Create(Row, TweenInfo.new(0.25), { Size = UDim2.new(1, 0, 0, targetHeight) }):Play()
+                end
+            end
+        end)
+    end
+
+    Library.Globals._RefreshHeightMap = Library.Globals._RefreshHeightMap or {}
+    Library.Globals._RefreshHeightMap[Content] = refreshHeight
+
+    Content.ChildAdded:Connect(function(child)
+        if child:IsA("GuiObject") then
+            task.defer(updateMoreBtnVisibility)
+            task.defer(function() task.wait(0.05); refreshHeight() end)
+        end
+    end)
+
+    MoreBtn.MouseButton1Click:Connect(function()
+        if not hasRealChild() then return end
+        open = not open
+        MoreBtn:SetAttribute("IsOpen", open)
+        MoreBtn.Text = open and "−" or "+"
+        
+        if open then
+            Content.Visible = true
+            task.wait()
+            refreshHeight()
+            TweenService:Create(MoreBtn, TweenInfo.new(0.2), {
+                BackgroundColor3 = Library.Theme.Accent,
+                TextColor3 = Color3.fromRGB(255, 255, 255)
+            }):Play()
+        else
+            currentHeight = ROW_H
+            TweenService:Create(Row, TweenInfo.new(0.2), {Size = UDim2.new(1, 0, 0, ROW_H)}):Play()
+            task.delay(0.25, function()
+                if not open then Content.Visible = false end
+            end)
+            TweenService:Create(MoreBtn, TweenInfo.new(0.2), {
+                BackgroundColor3 = LighterColor(Library.Theme.CardBg, 0.04),
+                TextColor3 = Library.Theme.OffText
+            }):Play()
+        end
+    end)
+
+    updateMoreBtnVisibility()
+    return Row, MoreBtn, Content
 end
 
 local function playLoader(onFinish)
@@ -2443,7 +2556,7 @@ local function playLoader(onFinish)
         local ok, err = pcall(function()
             local MAIN_TEXT = "GhostlyPilot"
             local SUB_TEXT = "by茉莉璐"
-            local WELCOME_TEXT = "欢迎使用GhostlyPilot"
+            local WELCOME_TEXT = "茉莉璐路过"
             local ICON_IMAGE = "rbxassetid://117319089551538"
             local GRADIENT_COLOR = ColorSequence.new({
                 ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 182, 193)),
@@ -2684,7 +2797,7 @@ end
 function Library:_BuildBuiltinWindows()
     local SettingsWin = self:CreateChildWindow("设置")
 
-    local themeMod = SettingsWin:CreateModule("主题", function() end)
+    local themeMod = SettingsWin:CreateModule("主题", function() end, true)
 
     local themeOrder = {"樱花", "雪天"}
     local themeNames = {}
@@ -2706,23 +2819,23 @@ function Library:_BuildBuiltinWindows()
         self:Notify("主题已切换：" .. selected, true)
     end, false, nil)
 
-local hudMod = SettingsWin:CreateModule("HUD 设置", function() end)
+local hudMod = SettingsWin:CreateModule("HUD 设置", function() end, true)
 hudMod:CreateDropdown("显示位置", {"居左", "居右", "隐藏"}, function(selected)
-    if selected == "居左" then
-        Library.Globals.HUDAlign = "Left"
-        if Library.updateHUDLayout then Library.updateHUDLayout() end
-        if Library.Globals.HUDFrame then Library.Globals.HUDFrame.Enabled = true end
-        Library:Notify("HUD 已靠左", true)
-    elseif selected == "居右" then
-        Library.Globals.HUDAlign = "Right"
-        if Library.updateHUDLayout then Library.updateHUDLayout() end
-        if Library.Globals.HUDFrame then Library.Globals.HUDFrame.Enabled = true end
-        Library:Notify("HUD 已靠右", true)
-    elseif selected == "隐藏" then
-        Library.Globals.HUDAlign = "Hidden"
-        if Library.Globals.HUDFrame then Library.Globals.HUDFrame.Enabled = false end
-        Library:Notify("HUD 已隐藏", false)
-    end
+if selected == "居左" then
+    Library.Globals.HUDAlign = "Left"
+    if Library.updateHUDLayout then Library.updateHUDLayout() end
+    if Library.Globals.HUDFrame then Library.Globals.HUDFrame.Visible = true end
+    Library:Notify("HUD 已靠左", true)
+elseif selected == "居右" then
+    Library.Globals.HUDAlign = "Right"
+    if Library.updateHUDLayout then Library.updateHUDLayout() end
+    if Library.Globals.HUDFrame then Library.Globals.HUDFrame.Visible = true end
+    Library:Notify("HUD 已靠右", true)
+elseif selected == "隐藏" then
+    Library.Globals.HUDAlign = "Hidden"
+    if Library.Globals.HUDFrame then Library.Globals.HUDFrame.Visible = false end
+    Library:Notify("HUD 已隐藏", false)
+end
 end, false, "HUD_Align_Setting")
 
     SettingsWin:CreateActionButton("退出", function()

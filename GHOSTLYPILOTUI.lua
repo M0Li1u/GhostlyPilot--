@@ -1854,64 +1854,92 @@ function Library:AddDropdown(parent, txt, opts, callback, multiple, cfgKey)
     end
 end)
 
-    local updateDropdown
-    updateDropdown = function(newOpts)
-        opts = newOpts
-        for _, child in ipairs(Opts:GetChildren()) do
-            if child:IsA("TextButton") then child:Destroy() end
-        end
-        
-        for _, o in ipairs(opts) do
-            local isSel = false
-            for _, v in ipairs(selected) do
-                if v == o then isSel = true; break end        
+local updateDropdown
+updateDropdown = function(newOpts, keepSelected)
+    opts = newOpts
+    
+    if keepSelected then
+        local validSelected = {}
+        for _, sel in ipairs(selected) do
+            local isValid = false
+            for _, opt in ipairs(opts) do
+                if opt == sel then isValid = true; break end
             end
-            local Ob = Instance.new("TextButton")
-            Ob.Parent = Opts
-            Ob.Size = UDim2.new(1, 0, 0, optH)
-            Ob.BackgroundTransparency = 1
-            Ob.Text = multiple and (isSel and "☑ " or "☐ ") .. o or o
-            Ob.Font = Enum.Font.Gotham
-            Ob.TextSize = 14
-            Ob.TextColor3 = self.Theme.TextDark
-            Ob.AutoButtonColor = false
-            Ob.TextXAlignment = Enum.TextXAlignment.Left
-            self:_BindText(Ob, function() return Library.Theme.TextDark end)
+            if isValid then table.insert(validSelected, sel) end
+        end
+        selected = validSelected
+    else
+        selected = {}
+    end
 
-            Ob.MouseButton1Click:Connect(function()
-                if multiple then
-                    local found = false
-                    for i, v in ipairs(selected) do
-                        if v == o then
-                            table.remove(selected, i)
-                            Ob.Text = "☐ " .. o
-                            found = true
-                            break
-                        end
-                    end
-                    if not found then
-                        table.insert(selected, o)
-                        Ob.Text = "☑ " .. o
-                    end
-                    UpdateDisplay()
-                    if cfgKey then Library:SetConfig(cfgKey, selected) end
-                    pcall(callback, selected)
-                else
-                    L.Text = txt .. ": " .. o .. " ▼"
-                    open = false
-                    TweenService:Create(Base, TweenInfo.new(0.25), {Size = UDim2.new(1, 0, 0, H)}):Play()
-                    if cfgKey then Library:SetConfig(cfgKey, o) end
-                    pcall(callback, o)
-                end
-            end)
-        end
-        
-        if open then
-            Base.Size = UDim2.new(1, 0, 0, H + #opts * optH)
-            Opts.Size = UDim2.new(1, 0, 0, #opts * optH)
-        end
+    UpdateDisplay()
+
+    for _, child in ipairs(Opts:GetChildren()) do
+        if child:IsA("TextButton") then child:Destroy() end
     end
     
+    for _, o in ipairs(opts) do
+        local isSel = false
+        for _, v in ipairs(selected) do
+            if v == o then isSel = true; break end        
+        end
+        local Ob = Instance.new("TextButton")
+        Ob.Parent = Opts
+        Ob.Size = UDim2.new(1, 0, 0, optH)
+        Ob.BackgroundTransparency = 1
+        Ob.Text = multiple and (isSel and "☑ " or "☐ ") .. o or o
+        Ob.Font = Enum.Font.Gotham
+        Ob.TextSize = 14
+        Ob.TextColor3 = self.Theme.TextDark
+        Ob.AutoButtonColor = false
+        Ob.TextXAlignment = Enum.TextXAlignment.Left
+        self:_BindText(Ob, function() return Library.Theme.TextDark end)
+
+        Ob.MouseButton1Click:Connect(function()
+            if multiple then
+                local found = false
+                for i, v in ipairs(selected) do
+                    if v == o then
+                        table.remove(selected, i)
+                        Ob.Text = "☐ " .. o
+                        found = true
+                        break
+                    end
+                end
+                if not found then
+                    table.insert(selected, o)
+                    Ob.Text = "☑ " .. o
+                end
+                UpdateDisplay()
+                if cfgKey then Library:SetConfig(cfgKey, selected) end
+                pcall(callback, selected)
+            else
+                L.Text = txt .. ": " .. o .. " ▼"
+                open = false
+                TweenService:Create(Base, TweenInfo.new(0.25), {Size = UDim2.new(1, 0, 0, H)}):Play()
+                if cfgKey then Library:SetConfig(cfgKey, o) end
+                pcall(callback, o)
+            end
+        end)
+    end
+    
+    if open then
+        Base.Size = UDim2.new(1, 0, 0, H + #opts * optH)
+        Opts.Size = UDim2.new(1, 0, 0, #opts * optH)
+        
+        local p = Base.Parent
+        while p do
+            if p.Name == "Content" and Library.Globals._RefreshHeightMap and Library.Globals._RefreshHeightMap[p] then
+                task.delay(0.1, function()
+                    Library.Globals._RefreshHeightMap[p]()
+                end)
+                break
+            end
+            p = p.Parent
+        end
+    end
+end
+
         pcall(function()
         Base.UpdateOptions = updateDropdown
         Base.UpdateOptionsFunc = updateDropdown

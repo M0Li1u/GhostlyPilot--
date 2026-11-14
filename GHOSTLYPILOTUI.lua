@@ -2603,7 +2603,7 @@ function Library:_BuildBuiltinWindows()
 
     local themeMod = SettingsWin:CreateModule("主题", function() end, true)
 
-    local themeOrder = {"樱花", "雪天"}
+    local themeOrder = {"樱花", "雪天", "暗黑教堂"}
     local themeNames = {}
     for _, name in ipairs(themeOrder) do
         if self.Presets[name] then
@@ -2664,13 +2664,10 @@ function Library:Init()
     self.Globals.Initialized = true
 
 local savedThemeName = self:_LoadThemeName()
-
--- 强制只保留樱花和雪天
-if savedThemeName ~= "雪天" and savedThemeName ~= "樱花" then
-    savedThemeName = "樱花" -- 如果是别的主题（比如薄荷绿、暗夜黑等），强制替换为樱花
-    self:_SaveThemeName(savedThemeName) -- 并覆盖写入本地文件
+if not savedThemeName or not self.Presets[savedThemeName] then
+    savedThemeName = "樱花"
+    self:_SaveThemeName(savedThemeName)
 end
-
 self.CurrentThemeName = savedThemeName
 if self.Presets[savedThemeName] then
     for k, v in pairs(self.Presets[savedThemeName]) do
